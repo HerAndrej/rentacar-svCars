@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase';
 import type { Vehicle, VehicleCategory } from '@/types';
-import { X, Upload, Trash2, GripVertical, ImagePlus } from 'lucide-react';
+import { X, Upload, Trash2, GripVertical, ImagePlus, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 
 interface Props {
@@ -27,7 +27,9 @@ export default function VehicleFormModal({ vehicle, onClose, onSaved }: Props) {
   const [error, setError] = useState('');
   const [images, setImages] = useState<string[]>(vehicle?.images || []);
   const [uploading, setUploading] = useState(false);
+  const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
   const [form, setForm] = useState({
@@ -68,6 +70,22 @@ export default function VehicleFormModal({ vehicle, onClose, onSaved }: Props) {
     }));
   }
 
+  async function uploadFile(file: File): Promise<string | null> {
+    const slug = form.slug || generateSlug(form.name);
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('slug', slug);
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.error) { setError(`Greška pri uploadu: ${data.error}`); return null; }
+      return data.url;
+    } catch {
+      setError('Greška pri uploadu slike');
+      return null;
+    }
+  }
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -75,29 +93,44 @@ export default function VehicleFormModal({ vehicle, onClose, onSaved }: Props) {
     setUploading(true);
     setError('');
 
-    const slug = form.slug || generateSlug(form.name);
-
     for (const file of Array.from(files)) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('slug', slug);
-
-      try {
-        const res = await fetch('/api/upload', { method: 'POST', body: formData });
-        const data = await res.json();
-
-        if (data.error) {
-          setError(`Greška pri uploadu: ${data.error}`);
-        } else {
-          setImages((prev) => [...prev, data.url]);
-        }
-      } catch {
-        setError('Greška pri uploadu slike');
-      }
+      const url = await uploadFile(file);
+      if (url) setImages((prev) => [...prev, url]);
     }
 
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  async function handleReplace(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || replaceIndex === null) return;
+
+    setUploading(true);
+    setError('');
+
+    const oldUrl = images[replaceIndex];
+    const newUrl = await uploadFile(file);
+
+    if (newUrl) {
+      setImages((prev) => prev.map((img, i) => i === replaceIndex ? newUrl : img));
+      if (oldUrl.includes('supabase.co/storage')) {
+        await fetch('/api/upload', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: oldUrl }),
+        });
+      }
+    }
+
+    setReplaceIndex(null);
+    setUploading(false);
+    if (replaceInputRef.current) replaceInputRef.current.value = '';
+  }
+
+  function triggerReplace(index: number) {
+    setReplaceIndex(index);
+    replaceInputRef.current?.click();
   }
 
   async function removeImage(url: string) {
@@ -171,8 +204,8 @@ export default function VehicleFormModal({ vehicle, onClose, onSaved }: Props) {
   const labelClass = 'block text-sm text-text-secondary mb-1';
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-bg-card border border-border rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 sm:p-4">
+      <div className="bg-bg-card border border-border rounded-t-xl sm:rounded-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-bg-card rounded-t-xl z-10">
           <h2 className="text-xl font-bold font-[family-name:var(--font-montserrat)]">
             {isEdit ? 'Uredi vozilo' : 'Novo vozilo'}
@@ -189,7 +222,7 @@ export default function VehicleFormModal({ vehicle, onClose, onSaved }: Props) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Naziv *</label>
               <input
@@ -218,7 +251,7 @@ export default function VehicleFormModal({ vehicle, onClose, onSaved }: Props) {
             <label className={labelClass}>Slike</label>
             <div className="space-y-3">
               {images.length > 0 && (
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {images.map((url, i) => (
                     <div key={url} className="relative group rounded-lg overflow-hidden border border-border bg-bg-primary aspect-[3/2]">
                       <Image
@@ -228,7 +261,7 @@ export default function VehicleFormModal({ vehicle, onClose, onSaved }: Props) {
                         className="object-cover"
                         sizes="200px"
                       />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
                         {i > 0 && (
                           <button
                             type="button"
@@ -239,6 +272,14 @@ export default function VehicleFormModal({ vehicle, onClose, onSaved }: Props) {
                             <GripVertical size={14} className="text-white rotate-90" />
                           </button>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => triggerReplace(i)}
+                          className="p-1.5 bg-accent/80 rounded-lg hover:bg-accent transition-colors"
+                          title="Zamijeni sliku"
+                        >
+                          <RefreshCw size={14} className="text-white" />
+                        </button>
                         <button
                           type="button"
                           onClick={() => removeImage(url)}
@@ -276,6 +317,13 @@ export default function VehicleFormModal({ vehicle, onClose, onSaved }: Props) {
                 onChange={handleUpload}
                 className="hidden"
               />
+              <input
+                ref={replaceInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleReplace}
+                className="hidden"
+              />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -295,7 +343,7 @@ export default function VehicleFormModal({ vehicle, onClose, onSaved }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Kategorija</label>
               <select
@@ -333,7 +381,7 @@ export default function VehicleFormModal({ vehicle, onClose, onSaved }: Props) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Godina</label>
               <input

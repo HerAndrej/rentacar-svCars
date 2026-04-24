@@ -188,14 +188,14 @@ export default function AnalyticsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold font-[family-name:var(--font-montserrat)]">Analitika</h1>
-        <div className="flex gap-1 bg-bg-card border border-border rounded-lg p-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Analitika</h1>
+        <div className="flex gap-1 bg-bg-card border border-border rounded-lg p-1 overflow-x-auto">
           {(Object.entries(periodLabels) as [Period, string][]).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setPeriod(key)}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                 period === key
                   ? 'bg-accent text-white'
                   : 'text-text-secondary hover:text-text-primary'
@@ -208,45 +208,45 @@ export default function AnalyticsPage() {
       </div>
 
       {/* KPI kartice */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-bg-card border border-border rounded-xl p-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+        <div className="bg-bg-card border border-border rounded-xl p-4 sm:p-6">
           <div className="flex items-center justify-between mb-1">
-            <DollarSign size={20} className="text-green-400" />
+            <DollarSign size={18} className="text-green-400" />
             <ChangeIndicator value={stats.revenueChange} />
           </div>
-          <p className="text-3xl font-bold font-[family-name:var(--font-montserrat)] mt-3">{stats.earned.toLocaleString()} <span className="text-lg text-text-secondary">KM</span></p>
-          <p className="text-text-secondary text-sm mt-1">Ukupna zarada</p>
+          <p className="text-xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)] mt-2 sm:mt-3">{stats.earned.toLocaleString()} <span className="text-sm sm:text-lg text-text-secondary">KM</span></p>
+          <p className="text-text-secondary text-xs sm:text-sm mt-1">Ukupna zarada</p>
         </div>
 
-        <div className="bg-bg-card border border-border rounded-xl p-6">
+        <div className="bg-bg-card border border-border rounded-xl p-4 sm:p-6">
           <div className="flex items-center justify-between mb-1">
-            <CalendarCheck size={20} className="text-blue-400" />
+            <CalendarCheck size={18} className="text-blue-400" />
             <ChangeIndicator value={stats.bookingChange} />
           </div>
-          <p className="text-3xl font-bold font-[family-name:var(--font-montserrat)] mt-3">{stats.total}</p>
-          <p className="text-text-secondary text-sm mt-1">Ukupno rezervacija</p>
+          <p className="text-xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)] mt-2 sm:mt-3">{stats.total}</p>
+          <p className="text-text-secondary text-xs sm:text-sm mt-1">Ukupno rezervacija</p>
         </div>
 
-        <div className="bg-bg-card border border-border rounded-xl p-6">
-          <TrendingUp size={20} className="text-accent" />
-          <p className="text-3xl font-bold font-[family-name:var(--font-montserrat)] mt-3">{stats.avgValue} <span className="text-lg text-text-secondary">KM</span></p>
-          <p className="text-text-secondary text-sm mt-1">Prosječna vrijednost</p>
+        <div className="bg-bg-card border border-border rounded-xl p-4 sm:p-6">
+          <TrendingUp size={18} className="text-accent" />
+          <p className="text-xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)] mt-2 sm:mt-3">{stats.avgValue} <span className="text-sm sm:text-lg text-text-secondary">KM</span></p>
+          <p className="text-text-secondary text-xs sm:text-sm mt-1">Prosječna vrijednost</p>
         </div>
 
-        <div className="bg-bg-card border border-border rounded-xl p-6">
-          <Car size={20} className="text-purple-400" />
-          <p className="text-3xl font-bold font-[family-name:var(--font-montserrat)] mt-3">{stats.avgDays} <span className="text-lg text-text-secondary">dana</span></p>
-          <p className="text-text-secondary text-sm mt-1">Prosječno trajanje</p>
+        <div className="bg-bg-card border border-border rounded-xl p-4 sm:p-6">
+          <Car size={18} className="text-purple-400" />
+          <p className="text-xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)] mt-2 sm:mt-3">{stats.avgDays} <span className="text-sm sm:text-lg text-text-secondary">dana</span></p>
+          <p className="text-text-secondary text-xs sm:text-sm mt-1">Prosječno trajanje</p>
         </div>
       </div>
 
       {/* Grafikon prihoda po mjesecima */}
-      <div className="bg-bg-card border border-border rounded-xl p-6 mb-8">
-        <div className="flex items-center gap-2 mb-6">
+      <div className="bg-bg-card border border-border rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+        <div className="flex items-center gap-2 mb-4 sm:mb-6">
           <BarChart3 size={20} className="text-accent" />
-          <h2 className="text-lg font-bold font-[family-name:var(--font-montserrat)]">Prihod po mjesecima</h2>
+          <h2 className="text-base sm:text-lg font-bold font-[family-name:var(--font-montserrat)]">Prihod po mjesecima</h2>
         </div>
-        <div className="flex items-end gap-3 h-48">
+        <div className="flex items-end gap-2 sm:gap-3 h-40 sm:h-48">
           {monthlyRevenue.map((m) => (
             <div key={m.month} className="flex-1 flex flex-col items-center gap-2">
               <span className="text-xs text-text-secondary font-medium">{m.revenue.toLocaleString()}</span>
@@ -263,7 +263,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8 mb-6 sm:mb-8">
         {/* Izvor rezervacija */}
         <div className="bg-bg-card border border-border rounded-xl p-6">
           <h2 className="text-lg font-bold font-[family-name:var(--font-montserrat)] mb-4">
@@ -358,24 +358,24 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Stopa konverzije/otkazivanja */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="bg-bg-card border border-border rounded-xl p-6 text-center">
-          <p className="text-4xl font-bold font-[family-name:var(--font-montserrat)] text-green-400">
+      <div className="grid grid-cols-3 gap-3 sm:gap-6">
+        <div className="bg-bg-card border border-border rounded-xl p-4 sm:p-6 text-center">
+          <p className="text-2xl sm:text-4xl font-bold font-[family-name:var(--font-montserrat)] text-green-400">
             {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
           </p>
-          <p className="text-text-secondary text-sm mt-2">Stopa završetka</p>
+          <p className="text-text-secondary text-xs sm:text-sm mt-1 sm:mt-2">Završetak</p>
         </div>
-        <div className="bg-bg-card border border-border rounded-xl p-6 text-center">
-          <p className="text-4xl font-bold font-[family-name:var(--font-montserrat)] text-red-400">
+        <div className="bg-bg-card border border-border rounded-xl p-4 sm:p-6 text-center">
+          <p className="text-2xl sm:text-4xl font-bold font-[family-name:var(--font-montserrat)] text-red-400">
             {stats.total > 0 ? Math.round((stats.cancelled / stats.total) * 100) : 0}%
           </p>
-          <p className="text-text-secondary text-sm mt-2">Stopa otkazivanja</p>
+          <p className="text-text-secondary text-xs sm:text-sm mt-1 sm:mt-2">Otkazivanje</p>
         </div>
-        <div className="bg-bg-card border border-border rounded-xl p-6 text-center">
-          <p className="text-4xl font-bold font-[family-name:var(--font-montserrat)] text-accent">
-            {stats.total > 0 ? Math.round(stats.earned / Math.max(stats.completed, 1)) : 0} KM
+        <div className="bg-bg-card border border-border rounded-xl p-4 sm:p-6 text-center">
+          <p className="text-2xl sm:text-4xl font-bold font-[family-name:var(--font-montserrat)] text-accent">
+            {stats.total > 0 ? Math.round(stats.earned / Math.max(stats.completed, 1)) : 0}
           </p>
-          <p className="text-text-secondary text-sm mt-2">Prosječan prihod po završenoj</p>
+          <p className="text-text-secondary text-xs sm:text-sm mt-1 sm:mt-2">KM/završena</p>
         </div>
       </div>
     </div>

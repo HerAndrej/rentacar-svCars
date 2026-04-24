@@ -56,21 +56,24 @@ export default function VehiclesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold font-[family-name:var(--font-montserrat)]">Vozila</h1>
+      <div className="flex items-center justify-between mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Vozila</h1>
         <button
           onClick={openNew}
-          className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors font-medium"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors font-medium text-sm sm:text-base"
         >
           <Plus size={18} />
-          Dodaj vozilo
+          <span className="hidden sm:inline">Dodaj vozilo</span>
+          <span className="sm:hidden">Dodaj</span>
         </button>
       </div>
 
       {loading ? (
         <div className="text-center py-12 text-text-muted">Učitavanje...</div>
       ) : (
-        <div className="bg-bg-card border border-border rounded-xl overflow-hidden">
+        <>
+        {/* Desktop table */}
+        <div className="hidden sm:block bg-bg-card border border-border rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border text-left text-sm text-text-muted">
@@ -132,6 +135,55 @@ export default function VehiclesPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile cards */}
+        <div className="sm:hidden space-y-3">
+          {vehicles.map((v) => (
+            <div key={v.id} className="bg-bg-card border border-border rounded-xl p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="font-semibold">{v.name}</p>
+                  <p className="text-xs text-text-muted">{v.transmission} · {v.fuel}</p>
+                </div>
+                <button
+                  onClick={() => toggleActive(v.id, v.is_active)}
+                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
+                    v.is_active
+                      ? 'bg-green-500/10 text-green-400'
+                      : 'bg-red-500/10 text-red-400'
+                  }`}
+                >
+                  {v.is_active ? <Eye size={12} /> : <EyeOff size={12} />}
+                  {v.is_active ? 'Aktivno' : 'Skriveno'}
+                </button>
+              </div>
+              <div className="flex items-center gap-3 mb-3 text-sm">
+                <span className="px-2 py-0.5 rounded bg-bg-primary text-text-secondary text-xs">
+                  {categoryLabels[v.category] || v.category}
+                </span>
+                <span className="font-semibold">{v.price_daily} KM/dan</span>
+                <span className="text-text-muted">{v.year}</span>
+              </div>
+              <div className="flex items-center gap-2 border-t border-border pt-3">
+                <button
+                  onClick={() => openEdit(v)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-bg-primary text-text-secondary hover:text-accent transition-colors text-sm"
+                >
+                  <Pencil size={14} />
+                  Uredi
+                </button>
+                <button
+                  onClick={() => deleteVehicle(v.id)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-bg-primary text-text-secondary hover:text-red-400 transition-colors text-sm"
+                >
+                  <Trash2 size={14} />
+                  Obriši
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        </>
       )}
 
       {showForm && (

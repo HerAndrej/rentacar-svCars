@@ -53,30 +53,30 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold font-[family-name:var(--font-montserrat)]">Dashboard</h1>
+      <div className="flex items-center justify-between mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Dashboard</h1>
         <Link href="/admin/analytics" className="text-accent text-sm hover:underline font-medium">
-          Detaljne analitike →
+          Analitike →
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-6">
         {stats.map((stat) => (
           <Link
             key={stat.label}
             href={stat.href}
-            className="bg-bg-card border border-border rounded-xl p-6 hover:border-accent/30 transition-colors"
+            className="bg-bg-card border border-border rounded-xl p-4 sm:p-6 hover:border-accent/30 transition-colors"
           >
-            <div className="flex items-center justify-between mb-4">
-              <stat.icon size={24} className={stat.color} />
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <stat.icon size={20} className={stat.color} />
             </div>
-            <p className="text-2xl font-bold font-[family-name:var(--font-montserrat)]">{stat.value}</p>
-            <p className="text-text-secondary text-sm mt-1">{stat.label}</p>
+            <p className="text-lg sm:text-2xl font-bold font-[family-name:var(--font-montserrat)]">{stat.value}</p>
+            <p className="text-text-secondary text-xs sm:text-sm mt-1">{stat.label}</p>
           </Link>
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mb-10">
+      <div className="grid grid-cols-2 gap-3 sm:gap-6 mb-6 sm:mb-10">
         {secondaryStats.map((stat) => (
           <Link
             key={stat.label}

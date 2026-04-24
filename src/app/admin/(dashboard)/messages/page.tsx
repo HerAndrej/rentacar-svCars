@@ -54,14 +54,14 @@ export default function MessagesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold font-[family-name:var(--font-montserrat)]">Poruke</h1>
+      <div className="flex items-center justify-between mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Poruke</h1>
       </div>
 
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => setFilter('unread')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
             filter === 'unread'
               ? 'bg-accent text-white'
               : 'bg-bg-card border border-border text-text-secondary hover:text-text-primary'
@@ -71,7 +71,7 @@ export default function MessagesPage() {
         </button>
         <button
           onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
             filter === 'all'
               ? 'bg-accent text-white'
               : 'bg-bg-card border border-border text-text-secondary hover:text-text-primary'
@@ -92,37 +92,37 @@ export default function MessagesPage() {
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`bg-bg-card border rounded-xl p-6 ${
+              className={`bg-bg-card border rounded-xl p-4 sm:p-6 ${
                 msg.is_read ? 'border-border' : 'border-accent/30'
               }`}
             >
               <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold text-lg">{msg.name}</h3>
-                  <div className="flex items-center gap-4 text-sm text-text-secondary mt-1">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-base sm:text-lg">{msg.name}</h3>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-text-secondary mt-1">
                     {msg.email && (
-                      <span className="flex items-center gap-1">
-                        <Mail size={14} />
-                        {msg.email}
+                      <span className="flex items-center gap-1 truncate">
+                        <Mail size={14} className="shrink-0" />
+                        <span className="truncate">{msg.email}</span>
                       </span>
                     )}
                     {msg.phone && (
                       <span className="flex items-center gap-1">
-                        <Phone size={14} />
+                        <Phone size={14} className="shrink-0" />
                         {msg.phone}
                       </span>
                     )}
                     <span className="flex items-center gap-1">
-                      <Clock size={14} />
+                      <Clock size={14} className="shrink-0" />
                       {formatDate(msg.created_at)}
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 ml-2 shrink-0">
                   {!msg.is_read && (
                     <button
                       onClick={() => markAsRead(msg.id)}
-                      className="p-2 rounded-lg hover:bg-green-500/10 text-text-secondary hover:text-green-400 transition-colors"
+                      className="p-1.5 sm:p-2 rounded-lg hover:bg-green-500/10 text-text-secondary hover:text-green-400 transition-colors"
                       title="Označi kao pročitano"
                     >
                       <Check size={16} />
@@ -130,14 +130,14 @@ export default function MessagesPage() {
                   )}
                   <button
                     onClick={() => deleteMessage(msg.id)}
-                    className="p-2 rounded-lg hover:bg-red-500/10 text-text-secondary hover:text-red-400 transition-colors"
+                    className="p-1.5 sm:p-2 rounded-lg hover:bg-red-500/10 text-text-secondary hover:text-red-400 transition-colors"
                     title="Obriši"
                   >
                     <Trash2 size={16} />
                   </button>
                 </div>
               </div>
-              <p className="text-text-secondary whitespace-pre-wrap">{msg.message}</p>
+              <p className="text-sm sm:text-base text-text-secondary whitespace-pre-wrap">{msg.message}</p>
             </div>
           ))}
         </div>

@@ -52,16 +52,16 @@ export default function ReservationsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold font-[family-name:var(--font-montserrat)]">Rezervacije</h1>
+      <div className="flex items-center justify-between mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Rezervacije</h1>
       </div>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         {[{ value: 'all', label: 'Sve' }, ...statusOptions].map((opt) => (
           <button
             key={opt.value}
             onClick={() => setFilter(opt.value)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
               filter === opt.value
                 ? 'bg-accent text-white'
                 : 'bg-bg-card border border-border text-text-secondary hover:text-text-primary'
@@ -83,15 +83,15 @@ export default function ReservationsPage() {
           {reservations.map((r) => {
             const currentStatus = statusOptions.find((s) => s.value === r.status) || statusOptions[0];
             return (
-              <div key={r.id} className="bg-bg-card border border-border rounded-xl p-6">
-                <div className="flex items-start justify-between mb-4">
+              <div key={r.id} className="bg-bg-card border border-border rounded-xl p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold">{r.customer_name}</h3>
-                    <p className="text-accent font-medium">
+                    <h3 className="text-base sm:text-lg font-semibold">{r.customer_name}</h3>
+                    <p className="text-accent font-medium text-sm">
                       {r.vehicle?.name || 'Vozilo nije odabrano'}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <span className="text-xs px-2 py-1 rounded bg-bg-card-hover text-text-muted">
                       {sourceLabels[r.source] || r.source}
                     </span>
@@ -101,7 +101,7 @@ export default function ReservationsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 text-sm">
                   <div className="flex items-center gap-2 text-text-secondary">
                     <Phone size={14} />
                     <span>{r.customer_phone}</span>
