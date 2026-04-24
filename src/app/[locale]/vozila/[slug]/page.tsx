@@ -1,10 +1,16 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ArrowRight, Fuel, Settings, Users, Briefcase, Wind, Bluetooth, Navigation, Armchair } from 'lucide-react';
-import { vehicles } from '@/data/vehicles';
+import { getVehicleBySlug } from '@/lib/queries';
+import { createClient } from '@supabase/supabase-js';
 
-export function generateStaticParams() {
-  return vehicles.map((v) => ({ slug: v.slug }));
+export async function generateStaticParams() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+  const { data } = await supabase.from('vehicles').select('slug').eq('is_active', true);
+  return (data || []).map((v) => ({ slug: v.slug }));
 }
 
 export default async function VehicleDetailPage({
@@ -13,7 +19,7 @@ export default async function VehicleDetailPage({
   params: Promise<{ slug: string; locale: string }>;
 }) {
   const { slug } = await params;
-  const vehicle = vehicles.find(v => v.slug === slug);
+  const vehicle = await getVehicleBySlug(slug);
 
   if (!vehicle) {
     notFound();
