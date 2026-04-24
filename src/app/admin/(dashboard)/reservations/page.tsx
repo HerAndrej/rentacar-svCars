@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
 import type { Reservation } from '@/types';
-import { Phone, Mail, Calendar, MapPin } from 'lucide-react';
+import { Phone, Mail, Calendar, MapPin, Download } from 'lucide-react';
+import { downloadCSV } from '@/lib/export-csv';
 
 const statusOptions = [
   { value: 'pending', label: 'Na čekanju', class: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
@@ -50,10 +51,39 @@ export default function ReservationsPage() {
     loadReservations();
   }
 
+  function exportReservations() {
+    const headers = ['Ime', 'Telefon', 'Email', 'Vozilo', 'Izvor', 'Status', 'Preuzimanje', 'Povrat', 'Lokacija preuzimanja', 'Lokacija povrata', 'Cijena (KM)', 'Napomena', 'Datum kreiranja'];
+    const rows = reservations.map((r) => [
+      r.customer_name,
+      r.customer_phone,
+      r.customer_email || '',
+      r.vehicle?.name || '',
+      sourceLabels[r.source] || r.source,
+      statusOptions.find((s) => s.value === r.status)?.label || r.status,
+      r.pickup_date,
+      r.return_date,
+      r.pickup_location,
+      r.return_location,
+      String(r.total_price || ''),
+      r.notes || '',
+      new Date(r.created_at).toLocaleDateString('hr-HR'),
+    ]);
+    const suffix = filter === 'all' ? 'sve' : filter;
+    downloadCSV(`rezervacije-${suffix}`, headers, rows);
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Rezervacije</h1>
+        <button
+          onClick={exportReservations}
+          className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-bg-card border border-border text-text-secondary hover:text-accent hover:border-accent/30 transition-colors"
+        >
+          <Download size={14} />
+          <span className="hidden sm:inline">Export CSV</span>
+          <span className="sm:hidden">CSV</span>
+        </button>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">

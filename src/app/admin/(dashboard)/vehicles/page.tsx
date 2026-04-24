@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
 import type { Vehicle } from '@/types';
-import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, Download } from 'lucide-react';
+import { downloadCSV } from '@/lib/export-csv';
 import VehicleFormModal from './VehicleFormModal';
 
 export default function VehiclesPage() {
@@ -54,18 +55,42 @@ export default function VehiclesPage() {
     quad: 'Quad',
   };
 
+  function exportVehicles() {
+    const headers = ['Naziv', 'Kategorija', 'Cijena/dan (KM)', 'Godina', 'Mjenjač', 'Gorivo', 'Status'];
+    const rows = vehicles.map((v) => [
+      v.name,
+      categoryLabels[v.category] || v.category,
+      String(v.price_daily),
+      String(v.year),
+      v.transmission,
+      v.fuel,
+      v.is_active ? 'Aktivno' : 'Skriveno',
+    ]);
+    downloadCSV('vozila', headers, rows);
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Vozila</h1>
-        <button
-          onClick={openNew}
-          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors font-medium text-sm sm:text-base"
-        >
-          <Plus size={18} />
-          <span className="hidden sm:inline">Dodaj vozilo</span>
-          <span className="sm:hidden">Dodaj</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={exportVehicles}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-bg-card border border-border text-text-secondary hover:text-accent hover:border-accent/30 transition-colors"
+          >
+            <Download size={14} />
+            <span className="hidden sm:inline">Export CSV</span>
+            <span className="sm:hidden">CSV</span>
+          </button>
+          <button
+            onClick={openNew}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors font-medium text-sm sm:text-base"
+          >
+            <Plus size={18} />
+            <span className="hidden sm:inline">Dodaj vozilo</span>
+            <span className="sm:hidden">Dodaj</span>
+          </button>
+        </div>
       </div>
 
       {loading ? (

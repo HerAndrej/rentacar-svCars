@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
 import type { ContactMessage } from '@/types';
-import { Mail, Phone, Clock, Check, Trash2 } from 'lucide-react';
+import { Mail, Phone, Clock, Check, Trash2, Download } from 'lucide-react';
+import { downloadCSV } from '@/lib/export-csv';
 
 export default function MessagesPage() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -52,10 +53,32 @@ export default function MessagesPage() {
     });
   }
 
+  function exportMessages() {
+    const headers = ['Ime', 'Email', 'Telefon', 'Poruka', 'Pročitano', 'Datum'];
+    const rows = messages.map((msg) => [
+      msg.name,
+      msg.email || '',
+      msg.phone || '',
+      msg.message,
+      msg.is_read ? 'Da' : 'Ne',
+      formatDate(msg.created_at),
+    ]);
+    const suffix = filter === 'all' ? 'sve' : 'neprocitane';
+    downloadCSV(`poruke-${suffix}`, headers, rows);
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Poruke</h1>
+        <button
+          onClick={exportMessages}
+          className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-bg-card border border-border text-text-secondary hover:text-accent hover:border-accent/30 transition-colors"
+        >
+          <Download size={14} />
+          <span className="hidden sm:inline">Export CSV</span>
+          <span className="sm:hidden">CSV</span>
+        </button>
       </div>
 
       <div className="flex gap-2 mb-6">

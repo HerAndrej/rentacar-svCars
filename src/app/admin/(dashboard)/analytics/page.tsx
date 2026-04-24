@@ -4,8 +4,9 @@ import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase';
 import {
   DollarSign, TrendingUp, CalendarCheck, Car, Users,
-  ArrowUpRight, ArrowDownRight, BarChart3,
+  ArrowUpRight, ArrowDownRight, BarChart3, Download,
 } from 'lucide-react';
+import { downloadCSV } from '@/lib/export-csv';
 
 type Period = '7d' | '30d' | '90d' | '365d' | 'all';
 type Reservation = {
@@ -175,6 +176,39 @@ export default function AnalyticsPage() {
     );
   }
 
+  function exportAnalytics() {
+    const headers = ['Datum', 'Kupac', 'Vozilo', 'Izvor', 'Status', 'Cijena (KM)', 'Preuzimanje', 'Povrat'];
+    const rows = filtered.map((r) => [
+      new Date(r.created_at).toLocaleDateString('hr-HR'),
+      '',
+      r.vehicle?.name || '',
+      sourceLabels[r.source] || r.source,
+      statusLabels[r.status]?.text || r.status,
+      String(r.total_price || 0),
+      r.pickup_date,
+      r.return_date,
+    ]);
+    downloadCSV(`analitika-${period}`, headers, rows);
+  }
+
+  function exportSummary() {
+    const headers = ['Metrika', 'Vrijednost'];
+    const rows = [
+      ['Period', periodLabels[period]],
+      ['Ukupna zarada (KM)', String(stats.earned)],
+      ['Ukupno rezervacija', String(stats.total)],
+      ['Završene', String(stats.completed)],
+      ['Otkazane', String(stats.cancelled)],
+      ['Prosječna vrijednost (KM)', String(stats.avgValue)],
+      ['Prosječno trajanje (dana)', String(stats.avgDays)],
+      ['Stopa završetka (%)', String(stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0)],
+      ['Stopa otkazivanja (%)', String(stats.total > 0 ? Math.round((stats.cancelled / stats.total) * 100) : 0)],
+      ...sourceBreakdown.map((s) => [`Izvor: ${sourceLabels[s.source] || s.source}`, `${s.revenue} KM (${s.count}x)`]),
+      ...vehicleBreakdown.map((v) => [`Vozilo: ${v.vehicle}`, `${v.revenue} KM (${v.count}x)`]),
+    ];
+    downloadCSV(`izvjestaj-${period}`, headers, rows);
+  }
+
   function ChangeIndicator({ value }: { value: number }) {
     if (value === 0) return null;
     const isPositive = value > 0;
@@ -189,7 +223,27 @@ export default function AnalyticsPage() {
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Analitika</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Analitika</h1>
+          <div className="flex gap-1">
+            <button
+              onClick={exportAnalytics}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-bg-card border border-border text-text-secondary hover:text-accent hover:border-accent/30 transition-colors"
+              title="Export podataka"
+            >
+              <Download size={14} />
+              <span className="hidden sm:inline">CSV</span>
+            </button>
+            <button
+              onClick={exportSummary}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-bg-card border border-border text-text-secondary hover:text-accent hover:border-accent/30 transition-colors"
+              title="Export izvještaja"
+            >
+              <Download size={14} />
+              <span className="hidden sm:inline">Izvještaj</span>
+            </button>
+          </div>
+        </div>
         <div className="flex gap-1 bg-bg-card border border-border rounded-lg p-1 overflow-x-auto">
           {(Object.entries(periodLabels) as [Period, string][]).map(([key, label]) => (
             <button
