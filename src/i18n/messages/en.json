@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "home": "HOME",
+    "vehicles": "VEHICLES",
+    "about": "ABOUT",
+    "services": "SERVICES",
+    "terms": "TERMS",
+    "contact": "CONTACT",
+    "bookNow": "BOOK NOW"
+  },
+  "hero": {
+    "title1": "RENT",
+    "title2": "YOUR DREAM",
+    "tagline": "LUXURY. RELIABILITY. FREEDOM.",
+    "subtitle": "Car rental in Mostar and all of Bosnia & Herzegovina. Premium vehicles for every occasion.",
+    "cta": "VIEW OUR FLEET"
+  },
+  "usp": {
+    "safety": {
+      "title": "SAFETY",
+      "description": "All vehicles are regularly serviced and insured."
+    },
+    "flexibility": {
+      "title": "FLEXIBILITY",
+      "description": "Daily, weekly, or monthly rental."
+    },
+    "partner": {
+      "title": "RELIABLE PARTNER",
+      "description": "Our support is always available to you."
+    },
+    "delivery": {
+      "title": "AVAILABLE EVERYWHERE",
+      "description": "Vehicle delivery to your location throughout BiH."
+    }
+  },
+  "about": {
+    "label": "ABOUT US",
+    "title": "YOUR PARTNER ON EVERY ROAD",
+    "description": "SV Cars is a rent-a-car agency based in Mostar. Our goal is to provide you with top-notch service, luxury vehicles, and a worry-free driving experience — whether you're in the city or on the road.",
+    "cta": "LEARN MORE ABOUT US"
+  },
+  "vehicles": {
+    "title": "OUR VEHICLES",
+    "subtitle": "Choose the perfect vehicle for your journey",
+    "priceFrom": "from",
+    "perDay": "KM/day",
+    "viewDetails": "VIEW",
+    "allVehicles": "VIEW ALL VEHICLES",
+    "filter": {
+      "all": "All",
+      "economy": "Economy",
+      "compact": "Compact",
+      "suv": "SUV",
+      "premium": "Premium",
+      "van": "Van",
+      "quad": "Quad"
+    }
+  },
+  "howItWorks": {
+    "label": "HOW IT WORKS",
+    "title": "THREE SIMPLE STEPS",
+    "step1": {
+      "title": "CHOOSE A VEHICLE",
+      "description": "Browse our fleet and choose the vehicle that suits you."
+    },
+    "step2": {
+      "title": "BOOK IT",
+      "description": "Fill out the form or contact us via phone or WhatsApp."
+    },
+    "step3": {
+      "title": "PICK IT UP",
+      "description": "Pick up the vehicle at our location or we'll deliver it to you."
+    }
+  },
+  "faq": {
+    "label": "FAQ",
+    "title": "FREQUENTLY ASKED QUESTIONS"
+  },
+  "contact": {
+    "title": "CONTACT US",
+    "subtitle": "Have a question? Reach out to us via phone, email, or visit us.",
+    "name": "Full name",
+    "email": "Email address",
+    "phone": "Phone",
+    "message": "Your message",
+    "send": "SEND MESSAGE",
+    "address": "Vojno bb, 88000 Mostar, BiH",
+    "workingHours": "Working hours: 08:00 - 20:00"
+  },
+  "reservation": {
+    "title": "RESERVE A VEHICLE",
+    "pickupDate": "Pickup date",
+    "returnDate": "Return date",
+    "pickupLocation": "Pickup location",
+    "returnLocation": "Return location",
+    "name": "Full name",
+    "phone": "Phone",
+    "email": "Email (optional)",
+    "notes": "Notes (optional)",
+    "submit": "SUBMIT RESERVATION",
+    "success": "Reservation submitted successfully! We'll contact you shortly.",
+    "whatsapp": "OR VIA WHATSAPP"
+  },
+  "footer": {
+    "description": "Premium car rental service in Mostar and all of Bosnia & Herzegovina. Luxury vehicles for every occasion.",
+    "quickLinks": "Quick Links",
+    "contactInfo": "Contact Info",
+    "followUs": "Follow Us",
+    "rights": "All rights reserved."
+  },
+  "services": {
+    "title": "OUR SERVICES",
+    "subtitle": "Complete car rental service tailored to your needs",
+    "personal": {
+      "title": "Personal Vehicles",
+      "description": "Wide selection of economy, compact, and premium vehicles for every occasion."
+    },
+    "quad": {
+      "title": "Quad Bikes",
+      "description": "Adventure on four wheels. Perfect for exploring Herzegovina."
+    },
+    "delivery": {
+      "title": "Vehicle Delivery",
+      "description": "We deliver the vehicle to the airport, hotel, or any location in BiH."
+    },
+    "longTerm": {
+      "title": "Long-term Rental",
+      "description": "Special rates for weekly and monthly rentals. Ideal for business users."
+    }
+  },
+  "terms": {
+    "title": "RENTAL TERMS",
+    "subtitle": "Everything you need to know before renting a vehicle"
+  }
+}

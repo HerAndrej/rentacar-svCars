@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "home": "POCETNA",
+    "vehicles": "VOZILA",
+    "about": "O NAMA",
+    "services": "USLUGE",
+    "terms": "USLOVI",
+    "contact": "KONTAKT",
+    "bookNow": "REZERVISI ODMAH"
+  },
+  "hero": {
+    "title1": "IZNAJMI",
+    "title2": "SVOJ SAN",
+    "tagline": "LUKSUZ. POUZDANOST. SLOBODA.",
+    "subtitle": "Iznajmljivanje vozila u Mostaru i cijeloj BiH. Premium vozila za svaku priliku.",
+    "cta": "PREGLEDAJ PONUDU"
+  },
+  "usp": {
+    "safety": {
+      "title": "SIGURNOST",
+      "description": "Sva vozila su redovno servisirana i osigurana."
+    },
+    "flexibility": {
+      "title": "FLEKSIBILNOST",
+      "description": "Dnevni, sedmicni ili mjesecni najam."
+    },
+    "partner": {
+      "title": "POUZDAN PARTNER",
+      "description": "Nasa podrska vam je uvijek na raspolaganju."
+    },
+    "delivery": {
+      "title": "DOSTUPNI SVUGDJE",
+      "description": "Dostava vozila na vasu lokaciju sirom BiH."
+    }
+  },
+  "about": {
+    "label": "O NAMA",
+    "title": "VAS PARTNER NA SVAKOM PUTU",
+    "description": "SV Cars je agencija za rent a car sa sjedistem u Mostaru. Nas cilj je da vam pruzimo vrhunsku uslugu, luksuzna vozila i bezbriznu voznju — bilo da ste u gradu ili na putovanju.",
+    "cta": "SAZNAJ VISE O NAMA"
+  },
+  "vehicles": {
+    "title": "NASA VOZILA",
+    "subtitle": "Odaberite savrseno vozilo za vase putovanje",
+    "priceFrom": "od",
+    "perDay": "KM/dan",
+    "viewDetails": "POGLEDAJ",
+    "allVehicles": "POGLEDAJ SVA VOZILA",
+    "filter": {
+      "all": "Sve",
+      "economy": "Ekonomicna",
+      "compact": "Kompaktna",
+      "suv": "SUV",
+      "premium": "Premium",
+      "van": "Van",
+      "quad": "Quad"
+    }
+  },
+  "howItWorks": {
+    "label": "KAKO FUNKCIONISE",
+    "title": "TRI JEDNOSTAVNA KORAKA",
+    "step1": {
+      "title": "ODABERITE VOZILO",
+      "description": "Pregledajte nasu ponudu i odaberite vozilo koje vam odgovara."
+    },
+    "step2": {
+      "title": "REZERVISITE",
+      "description": "Popunite formu ili nas kontaktirajte putem telefona ili WhatsAppa."
+    },
+    "step3": {
+      "title": "PREUZMITE",
+      "description": "Preuzmite vozilo na nasoj lokaciji ili vam ga dostavimo na adresu."
+    }
+  },
+  "faq": {
+    "label": "FAQ",
+    "title": "CESTO POSTAVLJANA PITANJA"
+  },
+  "contact": {
+    "title": "KONTAKTIRAJTE NAS",
+    "subtitle": "Imate pitanje? Javite nam se putem telefona, emaila ili nas posjetite.",
+    "name": "Ime i prezime",
+    "email": "Email adresa",
+    "phone": "Telefon",
+    "message": "Vasa poruka",
+    "send": "POSALJI PORUKU",
+    "address": "Vojno bb, 88000 Mostar, BiH",
+    "workingHours": "Radno vrijeme: 08:00 - 20:00"
+  },
+  "reservation": {
+    "title": "REZERVISITE VOZILO",
+    "pickupDate": "Datum preuzimanja",
+    "returnDate": "Datum vracanja",
+    "pickupLocation": "Lokacija preuzimanja",
+    "returnLocation": "Lokacija vracanja",
+    "name": "Ime i prezime",
+    "phone": "Telefon",
+    "email": "Email (opciono)",
+    "notes": "Napomena (opciono)",
+    "submit": "POSALJI REZERVACIJU",
+    "success": "Rezervacija uspjesno poslana! Kontaktiracemo vas uskoro.",
+    "whatsapp": "ILI PUTEM WHATSAPPA"
+  },
+  "footer": {
+    "description": "Premium rent-a-car usluga u Mostaru i cijeloj BiH. Luksuzna vozila za svaku priliku.",
+    "quickLinks": "Brzi linkovi",
+    "contactInfo": "Kontakt informacije",
+    "followUs": "Pratite nas",
+    "rights": "Sva prava zadrzana."
+  },
+  "services": {
+    "title": "NASE USLUGE",
+    "subtitle": "Kompletna rent-a-car usluga prilagodena vasim potrebama",
+    "personal": {
+      "title": "Osobna vozila",
+      "description": "Sirok izbor ekonomicnih, kompaktnih i premium vozila za svaku priliku."
+    },
+    "quad": {
+      "title": "Quad vozila",
+      "description": "Avantura na cetiri tocka. Idealno za istrazivanje Hercegovine."
+    },
+    "delivery": {
+      "title": "Dostava vozila",
+      "description": "Dostavljamo vozilo na aerodrom, hotel ili bilo koju lokaciju u BiH."
+    },
+    "longTerm": {
+      "title": "Dugorocni najam",
+      "description": "Posebne cijene za sedmicni i mjesecni najam. Idealno za poslovne korisnike."
+    }
+  },
+  "terms": {
+    "title": "USLOVI NAJMA",
+    "subtitle": "Sve sto trebate znati prije iznajmljivanja vozila"
+  }
+}
