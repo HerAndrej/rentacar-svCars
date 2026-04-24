@@ -1,9 +1,12 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server';
-import { CalendarCheck, Car, MessageSquare, Clock } from 'lucide-react';
+import { CalendarCheck, Car, MessageSquare, Clock, DollarSign, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function AdminDashboardPage() {
   const supabase = await createServerSupabaseClient();
+
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   const [
     { count: totalVehicles },
@@ -11,19 +14,34 @@ export default async function AdminDashboardPage() {
     { count: pendingReservations },
     { count: unreadMessages },
     { data: recentReservations },
+    { data: allReservations },
   ] = await Promise.all([
     supabase.from('vehicles').select('*', { count: 'exact', head: true }),
     supabase.from('reservations').select('*', { count: 'exact', head: true }),
     supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('contact_messages').select('*', { count: 'exact', head: true }).eq('is_read', false),
     supabase.from('reservations').select('*, vehicle:vehicles(name)').order('created_at', { ascending: false }).limit(5),
+    supabase.from('reservations').select('total_price, status, created_at'),
   ]);
 
+  const monthRevenue = (allReservations || [])
+    .filter((r) => r.status !== 'cancelled' && new Date(r.created_at) >= thirtyDaysAgo)
+    .reduce((sum, r) => sum + (r.total_price || 0), 0);
+
+  const totalRevenue = (allReservations || [])
+    .filter((r) => r.status !== 'cancelled')
+    .reduce((sum, r) => sum + (r.total_price || 0), 0);
+
   const stats = [
-    { label: 'Ukupno vozila', value: totalVehicles || 0, icon: Car, href: '/admin/vehicles', color: 'text-blue-400' },
-    { label: 'Sve rezervacije', value: totalReservations || 0, icon: CalendarCheck, href: '/admin/reservations', color: 'text-green-400' },
-    { label: 'Na čekanju', value: pendingReservations || 0, icon: Clock, href: '/admin/reservations', color: 'text-yellow-400' },
-    { label: 'Nepročitane poruke', value: unreadMessages || 0, icon: MessageSquare, href: '/admin/messages', color: 'text-accent' },
+    { label: 'Zarada (30 dana)', value: `${monthRevenue.toLocaleString()} KM`, icon: DollarSign, href: '/admin/analytics', color: 'text-green-400' },
+    { label: 'Ukupna zarada', value: `${totalRevenue.toLocaleString()} KM`, icon: TrendingUp, href: '/admin/analytics', color: 'text-accent' },
+    { label: 'Na čekanju', value: String(pendingReservations || 0), icon: Clock, href: '/admin/reservations', color: 'text-yellow-400' },
+    { label: 'Nepročitane poruke', value: String(unreadMessages || 0), icon: MessageSquare, href: '/admin/messages', color: 'text-blue-400' },
+  ];
+
+  const secondaryStats = [
+    { label: 'Ukupno vozila', value: totalVehicles || 0, icon: Car, href: '/admin/vehicles' },
+    { label: 'Sve rezervacije', value: totalReservations || 0, icon: CalendarCheck, href: '/admin/reservations' },
   ];
 
   const statusLabels: Record<string, { text: string; class: string }> = {
@@ -35,9 +53,14 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold font-[family-name:var(--font-montserrat)] mb-8">Dashboard</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold font-[family-name:var(--font-montserrat)]">Dashboard</h1>
+        <Link href="/admin/analytics" className="text-accent text-sm hover:underline font-medium">
+          Detaljne analitike →
+        </Link>
+      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {stats.map((stat) => (
           <Link
             key={stat.label}
@@ -46,9 +69,25 @@ export default async function AdminDashboardPage() {
           >
             <div className="flex items-center justify-between mb-4">
               <stat.icon size={24} className={stat.color} />
-              <span className="text-3xl font-bold font-[family-name:var(--font-montserrat)]">{stat.value}</span>
             </div>
-            <p className="text-text-secondary text-sm">{stat.label}</p>
+            <p className="text-2xl font-bold font-[family-name:var(--font-montserrat)]">{stat.value}</p>
+            <p className="text-text-secondary text-sm mt-1">{stat.label}</p>
+          </Link>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 gap-6 mb-10">
+        {secondaryStats.map((stat) => (
+          <Link
+            key={stat.label}
+            href={stat.href}
+            className="bg-bg-card border border-border rounded-xl p-5 hover:border-accent/30 transition-colors flex items-center gap-4"
+          >
+            <stat.icon size={20} className="text-text-muted" />
+            <div>
+              <span className="text-xl font-bold font-[family-name:var(--font-montserrat)]">{stat.value}</span>
+              <span className="text-text-secondary text-sm ml-2">{stat.label}</span>
+            </div>
           </Link>
         ))}
       </div>
@@ -73,10 +112,12 @@ export default async function AdminDashboardPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
+                    {r.total_price && (
+                      <span className="text-sm font-semibold">{r.total_price} KM</span>
+                    )}
                     <span className={`text-xs px-3 py-1 rounded-full font-medium ${status.class}`}>
                       {status.text}
                     </span>
-                    <span className="text-sm text-text-muted">{r.customer_phone}</span>
                   </div>
                 </div>
               );

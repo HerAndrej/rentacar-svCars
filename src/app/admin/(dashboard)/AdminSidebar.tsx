@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
-import { LayoutDashboard, CalendarCheck, Car, MessageSquare, LogOut, Globe } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Car, MessageSquare, BarChart3, LogOut, Globe } from 'lucide-react';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/analytics', label: 'Analitika', icon: BarChart3 },
   { href: '/admin/reservations', label: 'Rezervacije', icon: CalendarCheck },
   { href: '/admin/vehicles', label: 'Vozila', icon: Car },
   { href: '/admin/messages', label: 'Poruke', icon: MessageSquare },
