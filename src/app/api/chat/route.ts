@@ -161,6 +161,7 @@ interface GeminiPart {
   text?: string;
   functionCall?: { name: string; args: Record<string, string> };
   functionResponse?: { name: string; response: unknown };
+  thoughtSignature?: string;
 }
 
 interface GeminiContent {
@@ -206,20 +207,20 @@ export async function POST(req: NextRequest) {
       if (functionCalls.length === 0) break;
       iterations++;
 
-      const functionResponses: GeminiPart[] = [];
+      const functionResponseParts: GeminiPart[] = [];
       for (const part of functionCalls) {
         const fc = part.functionCall!;
         const result = await executeToolCall(fc.name, fc.args);
-        functionResponses.push({
+        functionResponseParts.push({
           functionResponse: {
             name: fc.name,
-            response: JSON.parse(result),
+            response: { result: JSON.parse(result) },
           },
         });
       }
 
       contents.push({ role: 'model', parts });
-      contents.push({ role: 'user', parts: functionResponses });
+      contents.push({ role: 'user', parts: functionResponseParts });
 
       response = await fetch(url, {
         method: 'POST',

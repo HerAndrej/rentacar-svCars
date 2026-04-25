@@ -56,12 +56,8 @@ export default function ChatBot() {
 
     try {
       const apiMessages = newMessages
-        .filter((m) => !(m.role === 'assistant' && m === messages[0] && messages.length === 1))
+        .filter((_, i) => !(i === 0 && newMessages[0].role === 'assistant'))
         .map((m) => ({ role: m.role, content: m.content }));
-
-      if (apiMessages.length === 1 || (apiMessages.length > 0 && apiMessages[0].role === 'user')) {
-        // pass as is
-      }
 
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -69,10 +65,9 @@ export default function ChatBot() {
         body: JSON.stringify({ messages: apiMessages }),
       });
 
-      if (!res.ok) throw new Error('API error');
-
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: 'assistant', content: data.message }]);
+      const reply = data.message || data.error || 'Greška. Pokušajte ponovo.';
+      setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
     } catch {
       setMessages((prev) => [
         ...prev,
