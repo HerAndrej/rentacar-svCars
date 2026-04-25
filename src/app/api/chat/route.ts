@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
@@ -46,54 +46,47 @@ async function createReservation(params: {
   return { success: true, id: data.id };
 }
 
-const tools = [
-  {
-    type: 'function',
-    function: {
+const geminiTools = [{
+  function_declarations: [
+    {
       name: 'get_vehicles',
       description: 'Get all available vehicles with their details, prices, and specs. Call this when the user asks about vehicles, prices, fleet, what cars are available, etc.',
-      parameters: { type: 'object', properties: {}, required: [] },
+      parameters: { type: 'OBJECT', properties: {} },
     },
-  },
-  {
-    type: 'function',
-    function: {
+    {
       name: 'check_availability',
-      description: 'Check if a specific vehicle is available for the given dates. Call this when the user wants to know if a car is free for certain dates.',
+      description: 'Check if a specific vehicle is available for the given dates.',
       parameters: {
-        type: 'object',
+        type: 'OBJECT',
         properties: {
-          vehicle_id: { type: 'string', description: 'The vehicle UUID' },
-          pickup_date: { type: 'string', description: 'Pickup date in YYYY-MM-DD format' },
-          return_date: { type: 'string', description: 'Return date in YYYY-MM-DD format' },
+          vehicle_id: { type: 'STRING', description: 'The vehicle UUID' },
+          pickup_date: { type: 'STRING', description: 'Pickup date in YYYY-MM-DD format' },
+          return_date: { type: 'STRING', description: 'Return date in YYYY-MM-DD format' },
         },
         required: ['vehicle_id', 'pickup_date', 'return_date'],
       },
     },
-  },
-  {
-    type: 'function',
-    function: {
+    {
       name: 'create_reservation',
       description: 'Create a new reservation. Only call this when the user has provided ALL required info: name, phone, vehicle, pickup date, return date, and pickup location.',
       parameters: {
-        type: 'object',
+        type: 'OBJECT',
         properties: {
-          vehicle_id: { type: 'string', description: 'The vehicle UUID' },
-          customer_name: { type: 'string', description: 'Customer full name' },
-          customer_phone: { type: 'string', description: 'Customer phone number' },
-          customer_email: { type: 'string', description: 'Customer email (optional)' },
-          pickup_date: { type: 'string', description: 'Pickup date YYYY-MM-DD' },
-          return_date: { type: 'string', description: 'Return date YYYY-MM-DD' },
-          pickup_location: { type: 'string', description: 'Pickup location' },
-          return_location: { type: 'string', description: 'Return location (defaults to pickup location)' },
-          notes: { type: 'string', description: 'Additional notes' },
+          vehicle_id: { type: 'STRING', description: 'The vehicle UUID' },
+          customer_name: { type: 'STRING', description: 'Customer full name' },
+          customer_phone: { type: 'STRING', description: 'Customer phone number' },
+          customer_email: { type: 'STRING', description: 'Customer email (optional)' },
+          pickup_date: { type: 'STRING', description: 'Pickup date YYYY-MM-DD' },
+          return_date: { type: 'STRING', description: 'Return date YYYY-MM-DD' },
+          pickup_location: { type: 'STRING', description: 'Pickup location' },
+          return_location: { type: 'STRING', description: 'Return location (defaults to pickup location)' },
+          notes: { type: 'STRING', description: 'Additional notes' },
         },
         required: ['vehicle_id', 'customer_name', 'customer_phone', 'pickup_date', 'return_date', 'pickup_location'],
       },
     },
-  },
-];
+  ],
+}];
 
 const SYSTEM_PROMPT = `Ti si SV Cars AI asistent za rent-a-car kompaniju u Mostaru, Bosna i Hercegovina.
 
@@ -139,7 +132,6 @@ async function executeToolCall(name: string, args: Record<string, string>) {
         price_daily: `${v.price_daily} KM`,
         price_weekly: v.price_weekly ? `${v.price_weekly} KM/dan` : null,
         specs: v.specs,
-        image: v.images?.[0] || null,
       })));
     }
     case 'check_availability': {
@@ -165,94 +157,92 @@ async function executeToolCall(name: string, args: Record<string, string>) {
   }
 }
 
-const MODELS = [
-  'minimax/minimax-m2.5:free',
-  'google/gemma-4-31b-it:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
-];
+interface GeminiPart {
+  text?: string;
+  functionCall?: { name: string; args: Record<string, string> };
+  functionResponse?: { name: string; response: unknown };
+}
 
-async function callOpenRouter(apiMessages: Record<string, unknown>[], model: string) {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://sv-cars.ba',
-    },
-    body: JSON.stringify({
-      model,
-      messages: apiMessages,
-      tools,
-      tool_choice: 'auto',
-      max_tokens: 1024,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`${model} failed: ${err}`);
-  }
-  return res.json();
+interface GeminiContent {
+  role: 'user' | 'model';
+  parts: GeminiPart[];
 }
 
 export async function POST(req: NextRequest) {
   try {
     const { messages } = await req.json();
 
-    const apiMessages: Record<string, unknown>[] = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...messages,
-    ];
+    const contents: GeminiContent[] = messages.map((m: { role: string; content: string }) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    }));
 
-    let data: { choices?: { message?: Record<string, unknown> }[] } | null = null;
-    let usedModel = MODELS[0];
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-    for (const model of MODELS) {
-      try {
-        data = await callOpenRouter(apiMessages, model);
-        usedModel = model;
-        break;
-      } catch (e) {
-        console.error(`Model ${model} failed:`, e);
-        continue;
-      }
+    let response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents,
+        tools: geminiTools,
+        tool_config: { function_calling_config: { mode: 'AUTO' } },
+        generationConfig: { maxOutputTokens: 1024 },
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('Gemini API error:', err);
+      return NextResponse.json({ error: 'AI service error' }, { status: 500 });
     }
 
-    if (!data) {
-      return NextResponse.json({ error: 'All AI models unavailable' }, { status: 503 });
-    }
-
-    let assistantMessage = data.choices?.[0]?.message;
+    let data = await response.json();
+    let parts: GeminiPart[] = data.candidates?.[0]?.content?.parts || [];
 
     let iterations = 0;
-    while (assistantMessage?.tool_calls && iterations < 5) {
+    while (iterations < 5) {
+      const functionCalls = parts.filter((p: GeminiPart) => p.functionCall);
+      if (functionCalls.length === 0) break;
       iterations++;
-      const toolResults = [];
-      const toolCalls = assistantMessage.tool_calls as { id: string; function: { name: string; arguments: string } }[];
 
-      for (const toolCall of toolCalls) {
-        const fnName = toolCall.function.name;
-        const fnArgs = JSON.parse(toolCall.function.arguments || '{}');
-        const result = await executeToolCall(fnName, fnArgs);
-        toolResults.push({
-          role: 'tool' as const,
-          tool_call_id: toolCall.id,
-          content: result,
+      const functionResponses: GeminiPart[] = [];
+      for (const part of functionCalls) {
+        const fc = part.functionCall!;
+        const result = await executeToolCall(fc.name, fc.args);
+        functionResponses.push({
+          functionResponse: {
+            name: fc.name,
+            response: JSON.parse(result),
+          },
         });
       }
 
-      apiMessages.push(assistantMessage);
-      apiMessages.push(...toolResults);
+      contents.push({ role: 'model', parts });
+      contents.push({ role: 'user', parts: functionResponses });
 
-      try {
-        data = await callOpenRouter(apiMessages, usedModel);
-      } catch {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents,
+          tools: geminiTools,
+          tool_config: { function_calling_config: { mode: 'AUTO' } },
+          generationConfig: { maxOutputTokens: 1024 },
+        }),
+      });
+
+      if (!response.ok) {
         return NextResponse.json({ message: 'Izvinite, AI servis je trenutno nedostupan. Kontaktirajte nas na +387 63 09 09 08.' });
       }
 
-      assistantMessage = data!.choices?.[0]?.message;
+      data = await response.json();
+      parts = data.candidates?.[0]?.content?.parts || [];
     }
 
-    const content = (assistantMessage?.content as string) || 'Izvinite, došlo je do greške. Pokušajte ponovo.';
+    const textParts = parts.filter((p: GeminiPart) => p.text);
+    const content = textParts.map((p: GeminiPart) => p.text).join('\n') || 'Izvinite, došlo je do greške. Pokušajte ponovo.';
     return NextResponse.json({ message: content });
   } catch (e) {
     console.error('Chat API error:', e);
