@@ -165,45 +165,71 @@ async function executeToolCall(name: string, args: Record<string, string>) {
   }
 }
 
+const MODELS = [
+  'minimax/minimax-m2.5:free',
+  'google/gemma-4-31b-it:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+];
+
+async function callOpenRouter(apiMessages: Record<string, unknown>[], model: string) {
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://sv-cars.ba',
+    },
+    body: JSON.stringify({
+      model,
+      messages: apiMessages,
+      tools,
+      tool_choice: 'auto',
+      max_tokens: 1024,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`${model} failed: ${err}`);
+  }
+  return res.json();
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { messages } = await req.json();
 
-    const apiMessages = [
+    const apiMessages: Record<string, unknown>[] = [
       { role: 'system', content: SYSTEM_PROMPT },
       ...messages,
     ];
 
-    let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://sv-cars.ba',
-      },
-      body: JSON.stringify({
-        model: 'google/gemma-4-31b-it:free',
-        messages: apiMessages,
-        tools,
-        tool_choice: 'auto',
-        max_tokens: 1024,
-      }),
-    });
+    let data: { choices?: { message?: Record<string, unknown> }[] } | null = null;
+    let usedModel = MODELS[0];
 
-    if (!response.ok) {
-      const err = await response.text();
-      return NextResponse.json({ error: 'AI service error', details: err }, { status: 500 });
+    for (const model of MODELS) {
+      try {
+        data = await callOpenRouter(apiMessages, model);
+        usedModel = model;
+        break;
+      } catch (e) {
+        console.error(`Model ${model} failed:`, e);
+        continue;
+      }
     }
 
-    let data = await response.json();
+    if (!data) {
+      return NextResponse.json({ error: 'All AI models unavailable' }, { status: 503 });
+    }
+
     let assistantMessage = data.choices?.[0]?.message;
 
     let iterations = 0;
     while (assistantMessage?.tool_calls && iterations < 5) {
       iterations++;
       const toolResults = [];
+      const toolCalls = assistantMessage.tool_calls as { id: string; function: { name: string; arguments: string } }[];
 
-      for (const toolCall of assistantMessage.tool_calls) {
+      for (const toolCall of toolCalls) {
         const fnName = toolCall.function.name;
         const fnArgs = JSON.parse(toolCall.function.arguments || '{}');
         const result = await executeToolCall(fnName, fnArgs);
@@ -217,34 +243,19 @@ export async function POST(req: NextRequest) {
       apiMessages.push(assistantMessage);
       apiMessages.push(...toolResults);
 
-      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://sv-cars.ba',
-        },
-        body: JSON.stringify({
-          model: 'google/gemma-4-31b-it:free',
-          messages: apiMessages,
-          tools,
-          tool_choice: 'auto',
-          max_tokens: 1024,
-        }),
-      });
-
-      if (!response.ok) {
-        const err = await response.text();
-        return NextResponse.json({ error: 'AI service error', details: err }, { status: 500 });
+      try {
+        data = await callOpenRouter(apiMessages, usedModel);
+      } catch {
+        return NextResponse.json({ message: 'Izvinite, AI servis je trenutno nedostupan. Kontaktirajte nas na +387 63 09 09 08.' });
       }
 
-      data = await response.json();
-      assistantMessage = data.choices?.[0]?.message;
+      assistantMessage = data!.choices?.[0]?.message;
     }
 
-    const content = assistantMessage?.content || 'Izvinite, došlo je do greške. Pokušajte ponovo.';
+    const content = (assistantMessage?.content as string) || 'Izvinite, došlo je do greške. Pokušajte ponovo.';
     return NextResponse.json({ message: content });
-  } catch {
+  } catch (e) {
+    console.error('Chat API error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
