@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
 import type { Reservation } from '@/types';
-import { Phone, Mail, Calendar, MapPin, Download } from 'lucide-react';
+import { Phone, Mail, Calendar, MapPin, Download, Plus, Pencil, Check, X } from 'lucide-react';
 import { downloadCSV } from '@/lib/export-csv';
+import ReservationFormModal from './ReservationFormModal';
 
 const statusOptions = [
   { value: 'pending', label: 'Na čekanju', class: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
@@ -24,6 +25,9 @@ export default function ReservationsPage() {
   const [reservations, setReservations] = useState<(Reservation & { vehicle?: { name: string } })[]>([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingPrice, setEditingPrice] = useState<string | null>(null);
+  const [priceValue, setPriceValue] = useState('');
   const supabase = createClient();
 
   useEffect(() => {
@@ -51,6 +55,18 @@ export default function ReservationsPage() {
     loadReservations();
   }
 
+  async function savePrice(id: string) {
+    const price = priceValue ? parseFloat(priceValue) : null;
+    await supabase.from('reservations').update({ total_price: price }).eq('id', id);
+    setEditingPrice(null);
+    loadReservations();
+  }
+
+  function startEditPrice(id: string, currentPrice: number | undefined) {
+    setEditingPrice(id);
+    setPriceValue(currentPrice ? String(currentPrice) : '');
+  }
+
   function exportReservations() {
     const headers = ['Ime', 'Telefon', 'Email', 'Vozilo', 'Izvor', 'Status', 'Preuzimanje', 'Povrat', 'Lokacija preuzimanja', 'Lokacija povrata', 'Cijena (KM)', 'Napomena', 'Datum kreiranja'];
     const rows = reservations.map((r) => [
@@ -76,14 +92,24 @@ export default function ReservationsPage() {
     <div>
       <div className="flex items-center justify-between mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Rezervacije</h1>
-        <button
-          onClick={exportReservations}
-          className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-bg-card border border-border text-text-secondary hover:text-accent hover:border-accent/30 transition-colors"
-        >
-          <Download size={14} />
-          <span className="hidden sm:inline">Export CSV</span>
-          <span className="sm:hidden">CSV</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={exportReservations}
+            className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-bg-card border border-border text-text-secondary hover:text-accent hover:border-accent/30 transition-colors"
+          >
+            <Download size={14} />
+            <span className="hidden sm:inline">Export CSV</span>
+            <span className="sm:hidden">CSV</span>
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors font-medium text-xs sm:text-sm"
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">Dodaj rezervaciju</span>
+            <span className="sm:hidden">Dodaj</span>
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">
@@ -156,11 +182,43 @@ export default function ReservationsPage() {
                   <p className="text-sm text-text-muted bg-bg-primary rounded-lg p-3 mb-4">{r.notes}</p>
                 )}
 
-                {r.total_price && (
-                  <p className="text-sm font-semibold mb-4">Cijena: {r.total_price} KM</p>
-                )}
+                <div className="flex items-center gap-4 mb-4">
+                  {editingPrice === r.id ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={priceValue}
+                        onChange={(e) => setPriceValue(e.target.value)}
+                        placeholder="Cijena"
+                        className="w-28 bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-accent"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') savePrice(r.id);
+                          if (e.key === 'Escape') setEditingPrice(null);
+                        }}
+                      />
+                      <span className="text-sm text-text-muted">KM</span>
+                      <button onClick={() => savePrice(r.id)} className="p-1 text-green-400 hover:text-green-300">
+                        <Check size={16} />
+                      </button>
+                      <button onClick={() => setEditingPrice(null)} className="p-1 text-text-muted hover:text-text-primary">
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => startEditPrice(r.id, r.total_price)}
+                      className="flex items-center gap-1.5 text-sm group"
+                    >
+                      <span className="font-semibold">
+                        {r.total_price ? `${r.total_price} KM` : 'Bez cijene'}
+                      </span>
+                      <Pencil size={12} className="text-text-muted group-hover:text-accent transition-colors" />
+                    </button>
+                  )}
+                </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {statusOptions.map((opt) => (
                     <button
                       key={opt.value}
@@ -180,6 +238,16 @@ export default function ReservationsPage() {
             );
           })}
         </div>
+      )}
+
+      {showForm && (
+        <ReservationFormModal
+          onClose={() => setShowForm(false)}
+          onSaved={() => {
+            setShowForm(false);
+            loadReservations();
+          }}
+        />
       )}
     </div>
   );
