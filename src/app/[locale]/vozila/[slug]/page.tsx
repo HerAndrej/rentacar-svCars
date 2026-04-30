@@ -21,15 +21,35 @@ export default async function VehicleDetailPage({
 }: {
   params: Promise<{ slug: string; locale: string }>;
 }) {
-  const { slug } = await params;
-  const vehicle = await getVehicleBySlug(slug);
+  let slug: string;
+  try {
+    const p = await params;
+    slug = p.slug;
+  } catch (e) {
+    console.error('[VehicleDetail] params error:', e);
+    notFound();
+  }
+
+  let vehicle;
+  try {
+    vehicle = await getVehicleBySlug(slug);
+  } catch (e) {
+    console.error('[VehicleDetail] query error:', e);
+    notFound();
+  }
 
   if (!vehicle) {
     notFound();
   }
 
-  const v = withFallbackImages(vehicle);
-  const images = v.images;
+  let images: string[];
+  try {
+    const v = withFallbackImages(vehicle);
+    images = v.images;
+  } catch (e) {
+    console.error('[VehicleDetail] images error:', e);
+    images = vehicle.images || [];
+  }
 
   const transmissionLabel = vehicle.transmission === 'automatic' ? 'Automatik' : 'Rucni';
   const fuelLabel = vehicle.fuel === 'diesel' ? 'Dizel' : vehicle.fuel === 'petrol' ? 'Benzin' : 'Hybrid';
