@@ -1,8 +1,12 @@
-import { createServerSupabaseClient } from './supabase-server';
+import { createClient } from '@supabase/supabase-js';
 import type { Vehicle } from '@/types';
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 export async function getVehicles(): Promise<Vehicle[]> {
-  const supabase = await createServerSupabaseClient();
   const { data } = await supabase
     .from('vehicles')
     .select('*')
@@ -12,7 +16,6 @@ export async function getVehicles(): Promise<Vehicle[]> {
 }
 
 export async function getVehicleBySlug(slug: string): Promise<Vehicle | null> {
-  const supabase = await createServerSupabaseClient();
   const { data } = await supabase
     .from('vehicles')
     .select('*')
@@ -28,7 +31,6 @@ export async function getFeaturedVehicles(limit = 4): Promise<Vehicle[]> {
 }
 
 export async function getVehiclesByCategory(category: string): Promise<Vehicle[]> {
-  const supabase = await createServerSupabaseClient();
   const { data } = await supabase
     .from('vehicles')
     .select('*')
