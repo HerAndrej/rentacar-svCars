@@ -1,7 +1,6 @@
 'use server';
 
 import { createServerSupabaseClient } from './supabase-server';
-import { notifyReservationCreated, notifyContactMessage, notifyStatusChange } from './email/send-notification';
 
 interface ReservationData {
   vehicleId: string;
@@ -52,18 +51,20 @@ export async function createReservation(data: ReservationData) {
     return { success: false, message: 'Greška pri slanju rezervacije. Pokušajte ponovo.' };
   }
 
-  notifyReservationCreated({
-    customerName: inserted.customer_name,
-    customerPhone: inserted.customer_phone,
-    customerEmail: inserted.customer_email || undefined,
-    vehicleName: inserted.vehicle?.name || undefined,
-    pickupDate: inserted.pickup_date,
-    returnDate: inserted.return_date,
-    pickupLocation: inserted.pickup_location,
-    returnLocation: inserted.return_location,
-    totalPrice: inserted.total_price || undefined,
-    source: inserted.source,
-  });
+  import('./email/send-notification').then(({ notifyReservationCreated }) =>
+    notifyReservationCreated({
+      customerName: inserted.customer_name,
+      customerPhone: inserted.customer_phone,
+      customerEmail: inserted.customer_email || undefined,
+      vehicleName: inserted.vehicle?.name || undefined,
+      pickupDate: inserted.pickup_date,
+      returnDate: inserted.return_date,
+      pickupLocation: inserted.pickup_location,
+      returnLocation: inserted.return_location,
+      totalPrice: inserted.total_price || undefined,
+      source: inserted.source,
+    })
+  ).catch(() => {});
 
   return { success: true, message: 'Rezervacija uspješno poslana!' };
 }
@@ -83,12 +84,14 @@ export async function sendContactMessage(data: ContactData) {
     return { success: false, message: 'Greška pri slanju poruke. Pokušajte ponovo.' };
   }
 
-  notifyContactMessage({
-    name: data.name,
-    email: data.email,
-    phone: data.phone,
-    message: data.message,
-  });
+  import('./email/send-notification').then(({ notifyContactMessage }) =>
+    notifyContactMessage({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      message: data.message,
+    })
+  ).catch(() => {});
 
   return { success: true, message: 'Poruka uspješno poslana!' };
 }
@@ -112,17 +115,19 @@ export async function updateReservationStatus(id: string, status: string) {
     .single();
 
   if (reservation?.customer_email) {
-    notifyStatusChange({
-      customerName: reservation.customer_name,
-      customerPhone: reservation.customer_phone,
-      customerEmail: reservation.customer_email,
-      vehicleName: reservation.vehicle?.name || undefined,
-      pickupDate: reservation.pickup_date,
-      returnDate: reservation.return_date,
-      pickupLocation: reservation.pickup_location,
-      returnLocation: reservation.return_location,
-      totalPrice: reservation.total_price || undefined,
-    }, status);
+    import('./email/send-notification').then(({ notifyStatusChange }) =>
+      notifyStatusChange({
+        customerName: reservation.customer_name,
+        customerPhone: reservation.customer_phone,
+        customerEmail: reservation.customer_email,
+        vehicleName: reservation.vehicle?.name || undefined,
+        pickupDate: reservation.pickup_date,
+        returnDate: reservation.return_date,
+        pickupLocation: reservation.pickup_location,
+        returnLocation: reservation.return_location,
+        totalPrice: reservation.total_price || undefined,
+      }, status)
+    ).catch(() => {});
   }
 
   return { success: true };
