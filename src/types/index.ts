@@ -52,8 +52,11 @@ export interface Reservation {
   total_price?: number;
   created_at: string;
   updated_at: string;
+  created_by_staff?: string;
+  handled_by_staff?: string;
   // Joined data
   vehicle?: Vehicle;
+  staff_profile?: Pick<StaffProfile, 'display_name'> | null;
 }
 
 export type ReservationStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
@@ -72,4 +75,15 @@ export interface ContactMessage {
 export interface FAQItem {
   question: string;
   answer: string;
+}
+
+export type UserRole = 'admin' | 'radnik';
+
+export interface StaffProfile {
+  id: string;
+  username: string;
+  display_name: string;
+  role: UserRole;
+  is_active: boolean;
+  created_at: string;
 }

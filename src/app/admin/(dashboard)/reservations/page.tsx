@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
 import type { Reservation } from '@/types';
-import { Phone, Mail, Calendar, MapPin, Download, Plus, Pencil, Check, X } from 'lucide-react';
+import { Phone, Mail, Calendar, MapPin, Download, Plus, Pencil, Check, X, User, UserCheck } from 'lucide-react';
 import { downloadCSV } from '@/lib/export-csv';
+import { useAuth } from '../AuthContext';
 import ReservationFormModal from './ReservationFormModal';
 
 const statusOptions = [
@@ -22,7 +23,8 @@ const sourceLabels: Record<string, string> = {
 };
 
 export default function ReservationsPage() {
-  const [reservations, setReservations] = useState<(Reservation & { vehicle?: { name: string } })[]>([]);
+  const { role, userId } = useAuth();
+  const [reservations, setReservations] = useState<(Reservation & { vehicle?: { name: string }; staff_profile?: { display_name: string }; handler_profile?: { display_name: string } })[]>([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -36,6 +38,7 @@ export default function ReservationsPage() {
 
   async function loadReservations() {
     setLoading(true);
+
     let query = supabase
       .from('reservations')
       .select('*, vehicle:vehicles(name)')
@@ -46,8 +49,41 @@ export default function ReservationsPage() {
     }
 
     const { data } = await query;
-    setReservations(data || []);
+    const reservationData = (data || []) as (Reservation & { vehicle?: { name: string }; staff_profile?: { display_name: string }; handler_profile?: { display_name: string } })[];
+
+    if (reservationData.length > 0) {
+      const allStaffIds = [
+        ...new Set([
+          ...reservationData.map((r) => r.created_by_staff).filter(Boolean),
+          ...reservationData.map((r) => r.handled_by_staff).filter(Boolean),
+        ]),
+      ] as string[];
+
+      if (allStaffIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('staff_profiles')
+          .select('id, display_name')
+          .in('id', allStaffIds);
+
+        const profileMap = new Map((profiles || []).map((p) => [p.id, p.display_name]));
+        for (const r of reservationData) {
+          if (r.created_by_staff && profileMap.has(r.created_by_staff)) {
+            r.staff_profile = { display_name: profileMap.get(r.created_by_staff)! };
+          }
+          if (r.handled_by_staff && profileMap.has(r.handled_by_staff)) {
+            r.handler_profile = { display_name: profileMap.get(r.handled_by_staff)! };
+          }
+        }
+      }
+    }
+
+    setReservations(reservationData);
     setLoading(false);
+  }
+
+  async function handleReservation(id: string) {
+    await supabase.from('reservations').update({ handled_by_staff: userId }).eq('id', id);
+    loadReservations();
   }
 
   async function updateStatus(id: string, status: string) {
@@ -68,7 +104,7 @@ export default function ReservationsPage() {
   }
 
   function exportReservations() {
-    const headers = ['Ime', 'Telefon', 'Email', 'Vozilo', 'Izvor', 'Status', 'Preuzimanje', 'Povrat', 'Lokacija preuzimanja', 'Lokacija povrata', 'Cijena (KM)', 'Napomena', 'Datum kreiranja'];
+    const headers = ['Ime', 'Telefon', 'Email', 'Vozilo', 'Izvor', 'Status', 'Preuzimanje', 'Povrat', 'Lokacija preuzimanja', 'Lokacija povrata', 'Cijena (KM)', 'Kreirao', 'Obradio', 'Napomena', 'Datum kreiranja'];
     const rows = reservations.map((r) => [
       r.customer_name,
       r.customer_phone,
@@ -81,6 +117,8 @@ export default function ReservationsPage() {
       r.pickup_location,
       r.return_location,
       String(r.total_price || ''),
+      r.staff_profile?.display_name || '',
+      r.handler_profile?.display_name || '',
       r.notes || '',
       new Date(r.created_at).toLocaleDateString('hr-HR'),
     ]);
@@ -91,16 +129,20 @@ export default function ReservationsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Rezervacije</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-montserrat)]">
+          {role === 'radnik' ? 'Moje rezervacije' : 'Rezervacije'}
+        </h1>
         <div className="flex items-center gap-2">
-          <button
-            onClick={exportReservations}
-            className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-bg-card border border-border text-text-secondary hover:text-accent hover:border-accent/30 transition-colors"
-          >
-            <Download size={14} />
-            <span className="hidden sm:inline">Export CSV</span>
-            <span className="sm:hidden">CSV</span>
-          </button>
+          {role === 'admin' && (
+            <button
+              onClick={exportReservations}
+              className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium bg-bg-card border border-border text-text-secondary hover:text-accent hover:border-accent/30 transition-colors"
+            >
+              <Download size={14} />
+              <span className="hidden sm:inline">Export CSV</span>
+              <span className="sm:hidden">CSV</span>
+            </button>
+          )}
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors font-medium text-xs sm:text-sm"
@@ -138,6 +180,7 @@ export default function ReservationsPage() {
         <div className="space-y-4">
           {reservations.map((r) => {
             const currentStatus = statusOptions.find((s) => s.value === r.status) || statusOptions[0];
+            const staffName = (r as { staff_profile?: { display_name: string } | null }).staff_profile?.display_name;
             return (
               <div key={r.id} className="bg-bg-card border border-border rounded-xl p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-4">
@@ -178,45 +221,72 @@ export default function ReservationsPage() {
                   </div>
                 </div>
 
+                {(staffName || r.handler_profile?.display_name || (!r.handled_by_staff && r.source !== 'phone')) && (
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-secondary mb-4">
+                    {staffName && (
+                      <div className="flex items-center gap-1.5">
+                        <User size={14} />
+                        <span>Kreirao: <span className="font-medium text-text-primary">{staffName}</span></span>
+                      </div>
+                    )}
+                    {r.handler_profile?.display_name ? (
+                      <div className="flex items-center gap-1.5">
+                        <UserCheck size={14} className="text-green-400" />
+                        <span>Obradio: <span className="font-medium text-green-400">{r.handler_profile.display_name}</span></span>
+                      </div>
+                    ) : !r.handled_by_staff ? (
+                      <button
+                        onClick={() => handleReservation(r.id)}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-colors"
+                      >
+                        <UserCheck size={12} />
+                        Preuzmi
+                      </button>
+                    ) : null}
+                  </div>
+                )}
+
                 {r.notes && (
                   <p className="text-sm text-text-muted bg-bg-primary rounded-lg p-3 mb-4">{r.notes}</p>
                 )}
 
-                <div className="flex items-center gap-4 mb-4">
-                  {editingPrice === r.id ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        value={priceValue}
-                        onChange={(e) => setPriceValue(e.target.value)}
-                        placeholder="Cijena"
-                        className="w-28 bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-accent"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') savePrice(r.id);
-                          if (e.key === 'Escape') setEditingPrice(null);
-                        }}
-                      />
-                      <span className="text-sm text-text-muted">KM</span>
-                      <button onClick={() => savePrice(r.id)} className="p-1 text-green-400 hover:text-green-300">
-                        <Check size={16} />
+                {role === 'admin' && (
+                  <div className="flex items-center gap-4 mb-4">
+                    {editingPrice === r.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={priceValue}
+                          onChange={(e) => setPriceValue(e.target.value)}
+                          placeholder="Cijena"
+                          className="w-28 bg-bg-primary border border-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-accent"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') savePrice(r.id);
+                            if (e.key === 'Escape') setEditingPrice(null);
+                          }}
+                        />
+                        <span className="text-sm text-text-muted">KM</span>
+                        <button onClick={() => savePrice(r.id)} className="p-1 text-green-400 hover:text-green-300">
+                          <Check size={16} />
+                        </button>
+                        <button onClick={() => setEditingPrice(null)} className="p-1 text-text-muted hover:text-text-primary">
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => startEditPrice(r.id, r.total_price)}
+                        className="flex items-center gap-1.5 text-sm group"
+                      >
+                        <span className="font-semibold">
+                          {r.total_price ? `${r.total_price} KM` : 'Bez cijene'}
+                        </span>
+                        <Pencil size={12} className="text-text-muted group-hover:text-accent transition-colors" />
                       </button>
-                      <button onClick={() => setEditingPrice(null)} className="p-1 text-text-muted hover:text-text-primary">
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => startEditPrice(r.id, r.total_price)}
-                      className="flex items-center gap-1.5 text-sm group"
-                    >
-                      <span className="font-semibold">
-                        {r.total_price ? `${r.total_price} KM` : 'Bez cijene'}
-                      </span>
-                      <Pencil size={12} className="text-text-muted group-hover:text-accent transition-colors" />
-                    </button>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex flex-wrap gap-2">
                   {statusOptions.map((opt) => (

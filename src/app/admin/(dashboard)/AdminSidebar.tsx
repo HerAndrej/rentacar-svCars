@@ -4,17 +4,36 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
-import { LayoutDashboard, CalendarCheck, Car, MessageSquare, BarChart3, LogOut, Globe, Menu, X } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Car, MessageSquare, BarChart3, LogOut, Globe, Menu, X, Users, CalendarSearch } from 'lucide-react';
+import type { UserRole } from '@/lib/auth-utils';
 
-const navItems = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  adminOnly?: boolean;
+  workerHidden?: boolean;
+}
+
+const navItems: NavItem[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/analytics', label: 'Analitika', icon: BarChart3 },
+  { href: '/admin/analytics', label: 'Analitika', icon: BarChart3, workerHidden: true },
+  { href: '/admin/dostupnost', label: 'Dostupnost', icon: CalendarSearch },
   { href: '/admin/reservations', label: 'Rezervacije', icon: CalendarCheck },
-  { href: '/admin/vehicles', label: 'Vozila', icon: Car },
+  { href: '/admin/vehicles', label: 'Vozila', icon: Car, workerHidden: true },
   { href: '/admin/messages', label: 'Poruke', icon: MessageSquare },
+  { href: '/admin/radnici', label: 'Radnici', icon: Users, adminOnly: true },
 ];
 
-export default function AdminSidebar({ userEmail }: { userEmail: string }) {
+export default function AdminSidebar({
+  userEmail,
+  role,
+  displayName,
+}: {
+  userEmail: string;
+  role: UserRole;
+  displayName: string;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -29,6 +48,15 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
     router.push('/admin/login');
     router.refresh();
   }
+
+  const filteredNav = navItems.filter((item) => {
+    if (role === 'radnik' && item.workerHidden) return false;
+    if (item.adminOnly && role !== 'admin') return false;
+    return true;
+  });
+
+  const panelLabel = role === 'radnik' ? 'Radnik Panel' : 'Admin Panel';
+  const userLabel = role === 'radnik' ? displayName : userEmail;
 
   return (
     <>
@@ -59,13 +87,13 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
             </div>
             <div>
               <h2 className="font-bold font-[family-name:var(--font-montserrat)]">SV CARS</h2>
-              <p className="text-xs text-text-muted">Admin Panel</p>
+              <p className="text-xs text-text-muted">{panelLabel}</p>
             </div>
           </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
+          {filteredNav.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
@@ -93,7 +121,7 @@ export default function AdminSidebar({ userEmail }: { userEmail: string }) {
             <span className="font-medium">Vidi sajt</span>
           </Link>
           <div className="px-4 py-2">
-            <p className="text-xs text-text-muted truncate">{userEmail}</p>
+            <p className="text-xs text-text-muted truncate">{userLabel}</p>
           </div>
           <button
             onClick={handleLogout}

@@ -14,16 +14,31 @@ interface ScrollRevealProps {
   distance?: number;
   className?: string;
   once?: boolean;
+  blur?: boolean;
+  scale?: boolean;
 }
 
-const getInitial = (direction: Direction, distance: number) => {
+const getInitial = (direction: Direction, distance: number, blur: boolean, scale: boolean) => {
+  const base: Record<string, number | string> = { opacity: 0 };
+
   switch (direction) {
-    case 'up': return { opacity: 0, y: distance };
-    case 'down': return { opacity: 0, y: -distance };
-    case 'left': return { opacity: 0, x: distance };
-    case 'right': return { opacity: 0, x: -distance };
-    case 'none': return { opacity: 0 };
+    case 'up': base.y = distance; break;
+    case 'down': base.y = -distance; break;
+    case 'left': base.x = distance; break;
+    case 'right': base.x = -distance; break;
   }
+
+  if (blur) base.filter = 'blur(8px)';
+  if (scale) base.scale = 0.95;
+
+  return base;
+};
+
+const getAnimate = (blur: boolean, scale: boolean) => {
+  const base: Record<string, number | string> = { opacity: 1, x: 0, y: 0 };
+  if (blur) base.filter = 'blur(0px)';
+  if (scale) base.scale = 1;
+  return base;
 };
 
 export default function ScrollReveal({
@@ -34,15 +49,20 @@ export default function ScrollReveal({
   distance = 40,
   className,
   once = true,
+  blur = false,
+  scale = false,
 }: ScrollRevealProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once, margin: '-50px' });
 
+  const initial = getInitial(direction, distance, blur, scale);
+  const animate = getAnimate(blur, scale);
+
   return (
     <motion.div
       ref={ref}
-      initial={getInitial(direction, distance)}
-      animate={isInView ? { opacity: 1, x: 0, y: 0 } : getInitial(direction, distance)}
+      initial={initial}
+      animate={isInView ? animate : initial}
       transition={{ duration, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
       className={className}
     >

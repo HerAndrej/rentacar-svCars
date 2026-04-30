@@ -12,6 +12,7 @@ interface ReservationData {
   pickupLocation: string;
   returnLocation: string;
   notes?: string;
+  totalPrice?: number;
 }
 
 interface ContactData {
@@ -36,6 +37,7 @@ export async function createReservation(data: ReservationData) {
       return_location: data.returnLocation,
       notes: data.notes,
       source: 'website',
+      total_price: data.totalPrice || null,
     });
 
   if (error) {

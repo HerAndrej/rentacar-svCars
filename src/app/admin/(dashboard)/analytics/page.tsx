@@ -7,6 +7,8 @@ import {
   ArrowUpRight, ArrowDownRight, BarChart3, Download,
 } from 'lucide-react';
 import { downloadCSV } from '@/lib/export-csv';
+import { useAuth } from '../AuthContext';
+import { useRouter } from 'next/navigation';
 
 type Period = '7d' | '30d' | '90d' | '365d' | 'all';
 type Reservation = {
@@ -43,10 +45,20 @@ const statusLabels: Record<string, { text: string; class: string }> = {
 };
 
 export default function AnalyticsPage() {
+  const { role } = useAuth();
+  const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>('30d');
   const supabase = createClient();
+
+  useEffect(() => {
+    if (role === 'radnik') {
+      router.push('/admin');
+    }
+  }, [role, router]);
+
+  if (role === 'radnik') return null;
 
   useEffect(() => {
     loadData();

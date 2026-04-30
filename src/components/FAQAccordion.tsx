@@ -16,14 +16,14 @@ export default function FAQAccordion() {
   const items = locale === 'hr' ? faqItemsHr : faqItemsEn;
 
   return (
-    <section className="py-20 bg-bg-primary">
+    <section className="py-24 lg:py-32 bg-bg-primary">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <ScrollReveal>
-          <div className="text-center mb-12">
-            <span className="text-accent font-[family-name:var(--font-montserrat)] font-bold text-sm tracking-wider">
+        <ScrollReveal blur>
+          <div className="text-center mb-14">
+            <span className="text-accent font-[family-name:var(--font-montserrat)] font-bold text-xs tracking-[0.3em] uppercase">
               {t('label')}
             </span>
-            <h2 className="font-[family-name:var(--font-montserrat)] font-black text-3xl sm:text-4xl mt-3">
+            <h2 className="font-[family-name:var(--font-montserrat)] font-black mt-3" style={{ fontSize: 'var(--text-h2)' }}>
               {t('title')}
             </h2>
           </div>
@@ -34,17 +34,22 @@ export default function FAQAccordion() {
             const isOpen = openIndex === index;
             return (
               <StaggerItem key={index}>
-                <div className="border border-border rounded-lg overflow-hidden">
+                <div className={`border rounded-xl overflow-hidden transition-all duration-300 ${
+                  isOpen ? 'border-accent/30 bg-accent/[0.03]' : 'border-border hover:border-border-light'
+                }`}>
                   <button
                     onClick={() => setOpenIndex(isOpen ? null : index)}
-                    className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-bg-card transition-colors"
+                    className="w-full flex items-center gap-4 px-6 py-5 text-left hover:bg-bg-card/50 transition-colors"
                   >
-                    <span className="font-medium text-sm sm:text-base pr-4">
+                    <span className="font-[family-name:var(--font-montserrat)] font-bold text-accent/30 text-sm flex-shrink-0">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="font-medium text-sm sm:text-base flex-1 pr-4">
                       {item.question}
                     </span>
                     <motion.div
                       animate={{ rotate: isOpen ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                     >
                       <ChevronDown size={18} className="text-accent flex-shrink-0" />
                     </motion.div>
@@ -58,11 +63,16 @@ export default function FAQAccordion() {
                         transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
                         className="overflow-hidden"
                       >
-                        <div className="px-6 pb-5">
-                          <p className="text-text-secondary text-sm leading-relaxed">
+                        <motion.div
+                          initial={{ filter: 'blur(4px)' }}
+                          animate={{ filter: 'blur(0px)' }}
+                          transition={{ duration: 0.3, delay: 0.1 }}
+                          className="px-6 pb-5 pl-16"
+                        >
+                          <p className="text-text-secondary text-sm leading-[1.7]">
                             {item.answer}
                           </p>
-                        </div>
+                        </motion.div>
                       </motion.div>
                     )}
                   </AnimatePresence>

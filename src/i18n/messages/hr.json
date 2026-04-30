@@ -37,7 +37,12 @@
     "label": "O NAMA",
     "title": "VAS PARTNER NA SVAKOM PUTU",
     "description": "SV Cars je agencija za rent a car sa sjedistem u Mostaru. Nas cilj je da vam pruzimo vrhunsku uslugu, luksuzna vozila i bezbriznu voznju — bilo da ste u gradu ili na putovanju.",
-    "cta": "SAZNAJ VISE O NAMA"
+    "cta": "SAZNAJ VISE O NAMA",
+    "statVehicles": "Vozila",
+    "statYears": "Godina iskustva",
+    "statClients": "Zadovoljnih klijenata",
+    "valuesLabel": "NASE VRIJEDNOSTI",
+    "valuesTitle": "Zasto nas klijenti biraju"
   },
   "vehicles": {
     "title": "NASA VOZILA",
@@ -126,7 +131,9 @@
     "longTerm": {
       "title": "Dugorocni najam",
       "description": "Posebne cijene za sedmicni i mjesecni najam. Idealno za poslovne korisnike."
-    }
+    },
+    "ctaTitle": "Zainteresovani?",
+    "ctaDescription": "Kontaktirajte nas za vise informacija ili rezervisite vozilo odmah."
   },
   "terms": {
     "title": "USLOVI NAJMA",

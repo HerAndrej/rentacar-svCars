@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Send } from 'lucide-react';
+import { Send, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ContactForm() {
   const t = useTranslations('contact');
@@ -12,35 +13,42 @@ export default function ContactForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsSubmitting(true);
-
-    // TODO: Replace with server action when Supabase is connected
     await new Promise(resolve => setTimeout(resolve, 1000));
-
     setIsSuccess(true);
     setIsSubmitting(false);
   }
 
   if (isSuccess) {
     return (
-      <div className="bg-bg-card border border-accent/30 rounded-lg p-12 text-center">
-        <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-4">
-          <Send size={24} className="text-accent" />
-        </div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+        className="glass rounded-xl p-12 text-center border border-accent/20"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 12 }}
+          className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-4"
+        >
+          <CheckCircle size={32} className="text-accent" />
+        </motion.div>
         <h3 className="font-[family-name:var(--font-montserrat)] font-bold text-xl mb-2">Hvala!</h3>
         <p className="text-text-secondary">Poruka uspjesno poslana. Kontaktiracemo vas uskoro.</p>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-bg-card border border-border rounded-lg p-8">
+    <form onSubmit={handleSubmit} className="glass rounded-xl p-8 border border-border/30">
       <div className="space-y-5">
         <div>
           <label className="block text-sm text-text-secondary mb-2">{t('name')}</label>
           <input
             type="text"
             required
-            className="w-full bg-bg-primary border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-colors"
+            className="w-full bg-bg-primary/80 border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-all focus:shadow-[0_0_0_3px_rgba(232,90,43,0.1)]"
             placeholder={t('name')}
           />
         </div>
@@ -50,7 +58,7 @@ export default function ContactForm() {
             <label className="block text-sm text-text-secondary mb-2">{t('email')}</label>
             <input
               type="email"
-              className="w-full bg-bg-primary border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-colors"
+              className="w-full bg-bg-primary/80 border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-all focus:shadow-[0_0_0_3px_rgba(232,90,43,0.1)]"
               placeholder={t('email')}
             />
           </div>
@@ -58,7 +66,7 @@ export default function ContactForm() {
             <label className="block text-sm text-text-secondary mb-2">{t('phone')}</label>
             <input
               type="tel"
-              className="w-full bg-bg-primary border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-colors"
+              className="w-full bg-bg-primary/80 border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-all focus:shadow-[0_0_0_3px_rgba(232,90,43,0.1)]"
               placeholder={t('phone')}
             />
           </div>
@@ -69,19 +77,48 @@ export default function ContactForm() {
           <textarea
             required
             rows={5}
-            className="w-full bg-bg-primary border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-colors resize-none"
+            className="w-full bg-bg-primary/80 border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-all resize-none focus:shadow-[0_0_0_3px_rgba(232,90,43,0.1)]"
             placeholder={t('message')}
           />
         </div>
 
-        <button
+        <motion.button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-accent text-white px-8 py-4 text-sm font-bold tracking-wider hover:bg-accent-hover transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full bg-accent text-white px-8 py-4 rounded-lg text-sm font-bold tracking-wider hover:bg-accent-hover transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
         >
-          {isSubmitting ? 'SLANJE...' : t('send')}
-          <Send size={16} />
-        </button>
+          <AnimatePresence mode="wait">
+            {isSubmitting ? (
+              <motion.span
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-2"
+              >
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                />
+                SLANJE...
+              </motion.span>
+            ) : (
+              <motion.span
+                key="idle"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-2"
+              >
+                {t('send')}
+                <Send size={16} />
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
       </div>
     </form>
   );

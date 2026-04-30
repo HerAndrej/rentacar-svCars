@@ -37,7 +37,12 @@
     "label": "ABOUT US",
     "title": "YOUR PARTNER ON EVERY ROAD",
     "description": "SV Cars is a rent-a-car agency based in Mostar. Our goal is to provide you with top-notch service, luxury vehicles, and a worry-free driving experience — whether you're in the city or on the road.",
-    "cta": "LEARN MORE ABOUT US"
+    "cta": "LEARN MORE ABOUT US",
+    "statVehicles": "Vehicles",
+    "statYears": "Years of experience",
+    "statClients": "Happy clients",
+    "valuesLabel": "OUR VALUES",
+    "valuesTitle": "Why our clients choose us"
   },
   "vehicles": {
     "title": "OUR VEHICLES",
@@ -126,7 +131,9 @@
     "longTerm": {
       "title": "Long-term Rental",
       "description": "Special rates for weekly and monthly rentals. Ideal for business users."
-    }
+    },
+    "ctaTitle": "Interested?",
+    "ctaDescription": "Contact us for more information or book a vehicle right away."
   },
   "terms": {
     "title": "RENTAL TERMS",
