@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import { X } from 'lucide-react';
+import { createReservation } from '@/lib/actions';
 import { useAuth } from '../AuthContext';
 
 interface Vehicle {
@@ -72,28 +73,23 @@ export default function ReservationFormModal({
     if (!form.customer_name || !form.customer_phone || !form.pickup_date || !form.return_date) return;
     setSaving(true);
 
-    const payload: Record<string, unknown> = {
-      vehicle_id: form.vehicle_id || null,
-      customer_name: form.customer_name,
-      customer_phone: form.customer_phone,
-      customer_email: form.customer_email || null,
-      pickup_date: form.pickup_date,
-      return_date: form.return_date,
-      pickup_location: form.pickup_location,
-      return_location: form.return_location || form.pickup_location,
+    const result = await createReservation({
+      vehicleId: form.vehicle_id,
+      customerName: form.customer_name,
+      customerPhone: form.customer_phone,
+      customerEmail: form.customer_email || undefined,
+      pickupDate: form.pickup_date,
+      returnDate: form.return_date,
+      pickupLocation: form.pickup_location,
+      returnLocation: form.return_location || form.pickup_location,
       source: form.source,
       status: form.status,
-      notes: form.notes || null,
-      created_by_staff: userId || null,
-    };
+      notes: form.notes || undefined,
+      totalPrice: role === 'admin' && form.total_price ? parseFloat(form.total_price) : undefined,
+      createdByStaff: userId || undefined,
+    });
 
-    if (role === 'admin') {
-      payload.total_price = form.total_price ? parseFloat(form.total_price) : null;
-    }
-
-    const { error } = await supabase.from('reservations').insert(payload);
-
-    if (!error) onSaved();
+    if (result.success) onSaved();
     setSaving(false);
   }
 

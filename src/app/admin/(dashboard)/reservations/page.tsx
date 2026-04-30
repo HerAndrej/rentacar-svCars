@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase';
 import type { Reservation } from '@/types';
 import { Phone, Mail, Calendar, MapPin, Download, Plus, Pencil, Check, X, User, UserCheck } from 'lucide-react';
 import { downloadCSV } from '@/lib/export-csv';
+import { updateReservationStatus } from '@/lib/actions';
 import { useAuth } from '../AuthContext';
 import ReservationFormModal from './ReservationFormModal';
 
@@ -87,7 +88,7 @@ export default function ReservationsPage() {
   }
 
   async function updateStatus(id: string, status: string) {
-    await supabase.from('reservations').update({ status }).eq('id', id);
+    await updateReservationStatus(id, status);
     loadReservations();
   }
 

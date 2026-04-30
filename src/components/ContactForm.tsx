@@ -4,17 +4,34 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Send, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { sendContactMessage } from '@/lib/actions';
 
 export default function ContactForm() {
   const t = useTranslations('contact');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSuccess(true);
+    setErrorMsg('');
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const result = await sendContactMessage({
+      name: formData.get('name') as string,
+      email: (formData.get('email') as string) || undefined,
+      phone: (formData.get('phone') as string) || undefined,
+      message: formData.get('message') as string,
+    });
+
+    if (result.success) {
+      setIsSuccess(true);
+    } else {
+      setErrorMsg(result.message);
+    }
     setIsSubmitting(false);
   }
 
@@ -47,6 +64,7 @@ export default function ContactForm() {
           <label className="block text-sm text-text-secondary mb-2">{t('name')}</label>
           <input
             type="text"
+            name="name"
             required
             className="w-full bg-bg-primary/80 border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-all focus:shadow-[0_0_0_3px_rgba(232,90,43,0.1)]"
             placeholder={t('name')}
@@ -58,6 +76,7 @@ export default function ContactForm() {
             <label className="block text-sm text-text-secondary mb-2">{t('email')}</label>
             <input
               type="email"
+              name="email"
               className="w-full bg-bg-primary/80 border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-all focus:shadow-[0_0_0_3px_rgba(232,90,43,0.1)]"
               placeholder={t('email')}
             />
@@ -66,6 +85,7 @@ export default function ContactForm() {
             <label className="block text-sm text-text-secondary mb-2">{t('phone')}</label>
             <input
               type="tel"
+              name="phone"
               className="w-full bg-bg-primary/80 border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-all focus:shadow-[0_0_0_3px_rgba(232,90,43,0.1)]"
               placeholder={t('phone')}
             />
@@ -75,12 +95,17 @@ export default function ContactForm() {
         <div>
           <label className="block text-sm text-text-secondary mb-2">{t('message')}</label>
           <textarea
+            name="message"
             required
             rows={5}
             className="w-full bg-bg-primary/80 border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none transition-all resize-none focus:shadow-[0_0_0_3px_rgba(232,90,43,0.1)]"
             placeholder={t('message')}
           />
         </div>
+
+        {errorMsg && (
+          <p className="text-red-400 text-sm">{errorMsg}</p>
+        )}
 
         <motion.button
           type="submit"

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { notifyReservationCreated } from '../email/send-notification';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const supabase = createClient(
@@ -157,6 +158,27 @@ async function executeToolCall(name: string, args: Record<string, string>, sourc
         notes: args.notes,
         source,
       });
+
+      if (result.success) {
+        const { data: vehicle } = await supabase
+          .from('vehicles')
+          .select('name')
+          .eq('id', args.vehicle_id)
+          .single();
+
+        notifyReservationCreated({
+          customerName: args.customer_name,
+          customerPhone: args.customer_phone,
+          customerEmail: args.customer_email || undefined,
+          vehicleName: vehicle?.name || undefined,
+          pickupDate: args.pickup_date,
+          returnDate: args.return_date,
+          pickupLocation: args.pickup_location,
+          returnLocation: args.return_location || args.pickup_location,
+          source,
+        });
+      }
+
       return JSON.stringify(result);
     }
     default:
