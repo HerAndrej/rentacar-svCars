@@ -7,7 +7,7 @@ import ScrollReveal from './motion/ScrollReveal';
 import AnimatedCounter from './motion/AnimatedCounter';
 
 const stats = [
-  { value: 50, suffix: '+', labelKey: 'statVehicles' },
+  { value: 10, suffix: '+', labelKey: 'statVehicles' },
   { value: 5, suffix: '+', labelKey: 'statYears' },
   { value: 1000, suffix: '+', labelKey: 'statClients' },
 ];
