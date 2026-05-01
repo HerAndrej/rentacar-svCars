@@ -8,7 +8,7 @@ import AnimatedCounter from '@/components/motion/AnimatedCounter';
 import GradientOrb from '@/components/motion/GradientOrb';
 
 const stats = [
-  { value: 50, suffix: '+', labelKey: 'statVehicles' },
+  { value: 10, suffix: '+', labelKey: 'statVehicles' },
   { value: 5, suffix: '+', labelKey: 'statYears' },
   { value: 1000, suffix: '+', labelKey: 'statClients' },
 ];
