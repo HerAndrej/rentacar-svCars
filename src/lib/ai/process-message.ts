@@ -18,13 +18,18 @@ async function getVehicles() {
 }
 
 async function checkAvailability(vehicleId: string, pickupDate: string, returnDate: string) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('reservations')
     .select('id, pickup_date, return_date, status')
     .eq('vehicle_id', vehicleId)
     .in('status', ['pending', 'confirmed'])
-    .or(`and(pickup_date.lte.${returnDate},return_date.gte.${pickupDate})`);
-  return (data || []).length === 0;
+    .lte('pickup_date', returnDate)
+    .gte('return_date', pickupDate);
+  if (error) {
+    console.error('checkAvailability error:', error);
+    return false;
+  }
+  return data.length === 0;
 }
 
 async function createReservation(params: {
@@ -39,9 +44,24 @@ async function createReservation(params: {
   notes?: string;
   source: string;
 }) {
+  let totalPrice: number | null = null;
+  if (params.vehicle_id) {
+    const { data: vehicle } = await supabase
+      .from('vehicles')
+      .select('price_daily')
+      .eq('id', params.vehicle_id)
+      .single();
+    if (vehicle?.price_daily) {
+      const days = Math.max(1, Math.ceil(
+        (new Date(params.return_date).getTime() - new Date(params.pickup_date).getTime()) / (1000 * 60 * 60 * 24)
+      ));
+      totalPrice = vehicle.price_daily * days;
+    }
+  }
+
   const { data, error } = await supabase
     .from('reservations')
-    .insert(params)
+    .insert({ ...params, total_price: totalPrice })
     .select('id')
     .single();
   if (error) return { success: false, error: error.message };

@@ -27,6 +27,22 @@ interface ContactData {
 
 export async function createReservation(data: ReservationData) {
   const supabase = await createServerSupabaseClient();
+
+  let totalPrice = data.totalPrice || null;
+  if (!totalPrice && data.vehicleId) {
+    const { data: vehicle } = await supabase
+      .from('vehicles')
+      .select('price_daily')
+      .eq('id', data.vehicleId)
+      .single();
+    if (vehicle?.price_daily) {
+      const days = Math.max(1, Math.ceil(
+        (new Date(data.returnDate).getTime() - new Date(data.pickupDate).getTime()) / (1000 * 60 * 60 * 24)
+      ));
+      totalPrice = vehicle.price_daily * days;
+    }
+  }
+
   const { data: inserted, error } = await supabase
     .from('reservations')
     .insert({
@@ -40,7 +56,7 @@ export async function createReservation(data: ReservationData) {
       return_location: data.returnLocation,
       notes: data.notes,
       source: data.source || 'website',
-      total_price: data.totalPrice || null,
+      total_price: totalPrice,
       status: data.status || 'pending',
       created_by_staff: data.createdByStaff || null,
     })

@@ -60,9 +60,15 @@ export default function ReservationFormModal({
     form.pickup_date && form.return_date
       ? Math.max(1, Math.ceil((new Date(form.return_date).getTime() - new Date(form.pickup_date).getTime()) / (1000 * 60 * 60 * 24)))
       : 0;
-  const suggestedPrice = role === 'admin' && selectedVehicle?.price_daily && days > 0
+  const suggestedPrice = selectedVehicle?.price_daily && days > 0
     ? selectedVehicle.price_daily * days
     : 0;
+
+  useEffect(() => {
+    if (suggestedPrice > 0 && !form.total_price) {
+      setForm((prev) => ({ ...prev, total_price: String(suggestedPrice) }));
+    }
+  }, [form.vehicle_id, form.pickup_date, form.return_date]);
 
   function update(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -85,7 +91,7 @@ export default function ReservationFormModal({
       source: form.source,
       status: form.status,
       notes: form.notes || undefined,
-      totalPrice: role === 'admin' && form.total_price ? parseFloat(form.total_price) : undefined,
+      totalPrice: form.total_price ? parseFloat(form.total_price) : undefined,
       createdByStaff: userId || undefined,
     });
 
@@ -147,7 +153,7 @@ export default function ReservationFormModal({
               <option value="">— Bez vozila —</option>
               {vehicles.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.name}{role === 'admin' && v.price_daily ? ` (${v.price_daily} KM/dan)` : ''}
+                  {v.name}{v.price_daily ? ` (${v.price_daily} KM/dan)` : ''}
                 </option>
               ))}
             </select>
@@ -224,29 +230,27 @@ export default function ReservationFormModal({
             </div>
           </div>
 
-          {role === 'admin' && (
-            <div>
-              <label className="block text-xs text-text-secondary mb-1">
-                Cijena (KM)
-                {suggestedPrice > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => update('total_price', String(suggestedPrice))}
-                    className="ml-2 text-accent hover:underline"
-                  >
-                    Predložena: {suggestedPrice} KM ({days} dana × {selectedVehicle?.price_daily} KM)
-                  </button>
-                )}
-              </label>
-              <input
-                type="number"
-                value={form.total_price}
-                onChange={(e) => update('total_price', e.target.value)}
-                placeholder="Custom cijena ili ostavi prazno"
-                className="w-full bg-bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
-              />
-            </div>
-          )}
+          <div>
+            <label className="block text-xs text-text-secondary mb-1">
+              Cijena (KM)
+              {suggestedPrice > 0 && (
+                <button
+                  type="button"
+                  onClick={() => update('total_price', String(suggestedPrice))}
+                  className="ml-2 text-accent hover:underline"
+                >
+                  Predložena: {suggestedPrice} KM ({days} dana × {selectedVehicle?.price_daily} KM)
+                </button>
+              )}
+            </label>
+            <input
+              type="number"
+              value={form.total_price}
+              onChange={(e) => update('total_price', e.target.value)}
+              placeholder="Custom cijena ili ostavi prazno"
+              className="w-full bg-bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
+            />
+          </div>
 
           <div>
             <label className="block text-xs text-text-secondary mb-1">Napomena</label>
