@@ -65,7 +65,7 @@ export default function ReservationFormModal({
     : 0;
 
   useEffect(() => {
-    if (role === 'admin' && suggestedPrice > 0 && !form.total_price) {
+    if (suggestedPrice > 0 && !form.total_price) {
       setForm((prev) => ({ ...prev, total_price: String(suggestedPrice) }));
     }
   }, [form.vehicle_id, form.pickup_date, form.return_date]);
@@ -233,7 +233,7 @@ export default function ReservationFormModal({
           <div>
             <label className="block text-xs text-text-secondary mb-1">
               Cijena (KM)
-              {role === 'admin' && suggestedPrice > 0 && (
+              {suggestedPrice > 0 && (
                 <button
                   type="button"
                   onClick={() => update('total_price', String(suggestedPrice))}
@@ -247,7 +247,7 @@ export default function ReservationFormModal({
               type="number"
               value={form.total_price}
               onChange={(e) => update('total_price', e.target.value)}
-              placeholder={role === 'admin' ? 'Custom cijena ili ostavi prazno' : 'Unesi cijenu'}
+              placeholder="Custom cijena ili ostavi prazno"
               className="w-full bg-bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
             />
           </div>
