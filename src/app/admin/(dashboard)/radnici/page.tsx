@@ -12,7 +12,7 @@ export default function RadniciPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [workers, setWorkers] = useState<(StaffProfile & { reservation_count: number })[]>([]);
+  const [workers, setWorkers] = useState<(StaffProfile & { reservation_count: number; total_revenue: number })[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [resetPasswordId, setResetPasswordId] = useState<string | null>(null);
@@ -54,16 +54,20 @@ export default function RadniciPage() {
     const workerIds = profiles.map((p) => p.id);
 
     let counts: Record<string, number> = {};
+    let revenues: Record<string, number> = {};
     if (workerIds.length > 0) {
       const { data: reservations } = await supabase
         .from('reservations')
-        .select('created_by_staff')
+        .select('created_by_staff, total_price, status')
         .in('created_by_staff', workerIds);
 
       if (reservations) {
         for (const r of reservations) {
           if (r.created_by_staff) {
             counts[r.created_by_staff] = (counts[r.created_by_staff] || 0) + 1;
+            if (r.status !== 'cancelled') {
+              revenues[r.created_by_staff] = (revenues[r.created_by_staff] || 0) + (r.total_price || 0);
+            }
           }
         }
       }
@@ -73,6 +77,7 @@ export default function RadniciPage() {
       profiles.map((p) => ({
         ...p,
         reservation_count: counts[p.id] || 0,
+        total_revenue: revenues[p.id] || 0,
       }))
     );
     setLoading(false);
@@ -178,6 +183,8 @@ export default function RadniciPage() {
                 </p>
                 <p className="text-sm text-text-secondary">
                   Rezervacija: <span className="font-medium text-text-primary">{w.reservation_count}</span>
+                  {' · '}
+                  Zarada: <span className="font-medium text-green-400">{w.total_revenue.toLocaleString()} KM</span>
                   {' · '}
                   Dodan: {new Date(w.created_at).toLocaleDateString('hr-HR')}
                 </p>
