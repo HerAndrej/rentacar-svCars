@@ -166,19 +166,22 @@ export default function AnalyticsPage() {
   const monthlyRevenue = useMemo(() => {
     const map: Record<string, number> = {};
     reservations
-      .filter((r) => r.status !== 'cancelled')
+      .filter((r) => r.status !== 'cancelled' && r.pickup_date)
       .forEach((r) => {
-        const month = r.created_at.substring(0, 7);
+        const month = r.pickup_date.substring(0, 7);
         map[month] = (map[month] || 0) + (r.total_price || 0);
       });
+    const monthsToShow: Record<Period, number> = { '7d': 1, '30d': 2, '90d': 4, '365d': 12, all: 24 };
+    const currentMonth = new Date().toISOString().substring(0, 7);
     return Object.entries(map)
       .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-6)
+      .slice(-monthsToShow[period])
       .map(([month, revenue]) => ({
         month: new Date(month + '-01').toLocaleDateString('hr-HR', { month: 'short', year: '2-digit' }),
         revenue,
+        inProgress: month === currentMonth,
       }));
-  }, [reservations]);
+  }, [reservations, period]);
 
   const maxRevenue = Math.max(...monthlyRevenue.map((m) => m.revenue), 1);
 
@@ -310,17 +313,24 @@ export default function AnalyticsPage() {
       <div className="bg-bg-card border border-border rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
         <div className="flex items-center gap-2 mb-4 sm:mb-6">
           <BarChart3 size={20} className="text-accent" />
-          <h2 className="text-base sm:text-lg font-bold font-[family-name:var(--font-montserrat)]">Prihod po mjesecima</h2>
+          <div>
+            <h2 className="text-base sm:text-lg font-bold font-[family-name:var(--font-montserrat)]">Prihod po mjesecima</h2>
+            <p className="text-xs text-text-muted">po datumu najma</p>
+          </div>
         </div>
         <div className="flex items-end gap-2 sm:gap-3 h-40 sm:h-48">
           {monthlyRevenue.map((m) => (
             <div key={m.month} className="flex-1 flex flex-col items-center gap-2">
               <span className="text-xs text-text-secondary font-medium">{m.revenue.toLocaleString()}</span>
               <div
-                className="w-full bg-accent/80 rounded-t-md hover:bg-accent transition-colors"
+                className={`w-full rounded-t-md transition-colors ${
+                  m.inProgress
+                    ? 'bg-accent/40 border-t-2 border-dashed border-accent hover:bg-accent/60'
+                    : 'bg-accent/80 hover:bg-accent'
+                }`}
                 style={{ height: `${(m.revenue / maxRevenue) * 100}%`, minHeight: '4px' }}
               />
-              <span className="text-xs text-text-muted">{m.month}</span>
+              <span className="text-xs text-text-muted whitespace-nowrap">{m.month}{m.inProgress ? ' • u toku' : ''}</span>
             </div>
           ))}
           {monthlyRevenue.length === 0 && (
