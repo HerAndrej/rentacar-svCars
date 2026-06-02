@@ -113,19 +113,23 @@ export default async function AdminDashboardPage() {
     supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     supabase.from('contact_messages').select('*', { count: 'exact', head: true }).eq('is_read', false),
     supabase.from('reservations').select('*, vehicle:vehicles(name)').order('created_at', { ascending: false }).limit(5),
-    supabase.from('reservations').select('total_price, status, created_at'),
+    supabase.from('reservations').select('total_price, status, created_at, pickup_date'),
   ]);
 
+  const currentMonthKey = new Date().toISOString().substring(0, 7);
   const monthRevenue = (allReservations || [])
-    .filter((r) => r.status !== 'cancelled' && new Date(r.created_at) >= thirtyDaysAgo)
+    .filter((r) => r.status !== 'cancelled' && r.pickup_date?.substring(0, 7) === currentMonthKey)
     .reduce((sum, r) => sum + (r.total_price || 0), 0);
 
   const totalRevenue = (allReservations || [])
     .filter((r) => r.status !== 'cancelled')
     .reduce((sum, r) => sum + (r.total_price || 0), 0);
 
+  const bsMonths = ['januar', 'februar', 'mart', 'april', 'maj', 'juni', 'juli', 'august', 'septembar', 'oktobar', 'novembar', 'decembar'];
+  const monthLabel = bsMonths[new Date().getMonth()];
+
   const stats = [
-    { label: 'Zarada (30 dana)', value: `${monthRevenue.toLocaleString()} KM`, icon: DollarSign, href: '/admin/analytics', color: 'text-green-400' },
+    { label: `Zarada (${monthLabel})`, value: `${monthRevenue.toLocaleString()} KM`, icon: DollarSign, href: '/admin/analytics', color: 'text-green-400' },
     { label: 'Ukupna zarada', value: `${totalRevenue.toLocaleString()} KM`, icon: TrendingUp, href: '/admin/analytics', color: 'text-accent' },
     { label: 'Na čekanju', value: String(pendingReservations || 0), icon: Clock, href: '/admin/reservations', color: 'text-yellow-400' },
     { label: 'Nepročitane poruke', value: String(unreadMessages || 0), icon: MessageSquare, href: '/admin/messages', color: 'text-blue-400' },
